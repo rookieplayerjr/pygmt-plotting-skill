@@ -26,9 +26,19 @@ git clone https://github.com/rookieplayerjr/pygmt-plotting-skill.git ~/.codex/sk
 
 If `CODEX_HOME` is set, use `$CODEX_HOME/skills` instead of `~/.codex/skills`.
 
-Both runtimes discover the skill automatically from the `SKILL.md` frontmatter; start a new
-session afterwards. The content is platform-neutral — it is reference material and runnable
-Python, with no host-specific tool calls — so it works unchanged on either.
+**Tencent WorkBuddy**
+
+```bash
+git clone https://github.com/rookieplayerjr/pygmt-plotting-skill.git ~/.workbuddy/skills/pygmt-plotting
+```
+
+All three runtimes discover the skill automatically from the `SKILL.md` frontmatter; start a
+new session afterwards. The content is platform-neutral — it is reference material and
+runnable Python, with no host-specific tool calls — so it works unchanged on any of them.
+
+Rendering figures additionally requires GMT and PyGMT to be installed in whatever environment
+the agent executes Python in. The reference and gotcha material is useful without them; the
+four scripts are not.
 
 No git? Download the tarball instead:
 
