@@ -9,14 +9,35 @@ accumulate — a catalogue of field-tested traps that the official docs do not m
 
 ## Install
 
-Drop it into your agent's skills directory:
+Clone it into your agent's skills directory. Note that the target directory is
+`pygmt-plotting`, not the repository name — keep the skill name and the folder name in sync.
+
+**Claude Code**
 
 ```bash
 git clone https://github.com/rookieplayerjr/pygmt-plotting-skill.git ~/.claude/skills/pygmt-plotting
 ```
 
-Claude Code discovers it automatically from the `SKILL.md` frontmatter. For other agent
-runtimes, see your platform's skill-loading documentation.
+**Codex**
+
+```bash
+git clone https://github.com/rookieplayerjr/pygmt-plotting-skill.git ~/.codex/skills/pygmt-plotting
+```
+
+If `CODEX_HOME` is set, use `$CODEX_HOME/skills` instead of `~/.codex/skills`.
+
+Both runtimes discover the skill automatically from the `SKILL.md` frontmatter; start a new
+session afterwards. The content is platform-neutral — it is reference material and runnable
+Python, with no host-specific tool calls — so it works unchanged on either.
+
+No git? Download the tarball instead:
+
+```bash
+curl -L https://github.com/rookieplayerjr/pygmt-plotting-skill/archive/refs/heads/main.tar.gz | tar xz
+```
+
+Then rename the extracted `pygmt-plotting-skill-main/` folder to `pygmt-plotting` and move it
+into the skills directory for your runtime.
 
 ## What's inside
 
