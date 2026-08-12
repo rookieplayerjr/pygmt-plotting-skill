@@ -16,7 +16,7 @@ nearest-neighbor guard, GEM fault traces, 2016 Mw 7.0 (white) and 2026 (yellow) 
 
 ## Features
 
-- **Eight runnable templates.** Displacement map, seismicity map with focal mechanisms,
+- **Nine runnable templates.** Displacement map, seismicity map with focal mechanisms,
   map + depth section, E/N/U component panels, GPS velocity field, wrapped interferogram,
   3D finite-fault slip fence, station-centered teleseismic geometry. Each runs standalone
   in seconds (two on a bundled real USGS catalog); you edit only the CONFIG block and the
@@ -47,7 +47,7 @@ is useful without them.
 
 ## Templates
 
-Eight runnable templates; every figure below is real data — the bundled USGS
+Nine runnable templates; every figure below is real data — the bundled USGS
 Japan-trench catalog (public domain, `scripts/data/japan_trench_usgs.csv`) or
 Sentinel-1/GEONET products of the 2026 Mj 7.1 Kumamoto earthquake:
 
@@ -64,23 +64,30 @@ their real-data counterparts are the Kumamoto figures on this page.
 
 ## Real-data example
 
-<p align="center"><img src="previews/kumamoto_displacement.png" width="620"></p>
+<p align="center"><img src="previews/sagaing_ns_offsets.png" width="720"></p>
 
-Ground displacement of the same earthquake from Sentinel-1 pixel-offset tracking,
-draped over shaded relief with `displacement_map.py` conventions: diverging `vik`
-centered at zero, data gaps left transparent over terrain, W/S-only annotations,
-horizontal colorbar with units. The blue/red asymmetry across the Hinagu fault zone
-is the right-lateral rupture reading directly off the figure.
+The 2025 Mw 7.7 Sagaing (Myanmar) earthquake in Sentinel-2 optical image
+correlation: N-S offsets from two destriped tile mosaics, `displacement_map.py`
+conventions — diverging `vik` centered at zero, decorrelated pixels transparent
+over shaded relief. The ±4 m antisymmetry across the razor-sharp trace is the
+right-lateral rupture; the star is the USGS epicenter.
 
 ## Styles
 
 <p align="center"><img src="previews/styles_all.png" width="860"></p>
 
-Same data — the real Kumamoto pixel-offset displacement field — six looks; set
+Same data — the real Sagaing S2 offset field — six looks; set
 `STYLE = "..."` in any template. All styles keep the same hard
 rules (annotations on W/S only, bottom colorbar with units, depth axes positive-down).
 `style_presets.py` also exposes `style()`, `panel_label()`, `colorbar()`, `coast_colors()`
 for standalone scripts.
+
+## Community-adapted showpieces
+
+| | |
+|---|---|
+| <img src="previews/earth_interior.png" width="420"> | <img src="previews/sagaing_3d.png" width="420"> |
+| `earth_interior.py` — Earth shells to scale with PcP / PKiKP ray chords (polar projection; GMT-China gallery ex002 pattern) | Sagaing N-S offsets draped on 3D terrain with `grdview` (`drapegrid` technique of gallery ex029) |
 
 ## Documentation
 

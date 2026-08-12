@@ -13,7 +13,7 @@
 |---|---|---|
 | ex030 | **三维有限断层滑动栅栏图**（plot3d 多边形 CPT 着色 + 3D 视点 -p160/20） | **已移植为 `scripts/fault_slip_3d.py`**（PyGMT + house 规则）；bash 原版见社区页面 |
 | ex011 | **台站中心方位等距投影**（-JE + SE- 同心震心距圈 30°/60°/90°） | **已移植为 `scripts/station_azimuthal_map.py`**；bash 原版见社区页面 |
-| ★ ex002 | 地球内部界面 + PcP/PKiKP 射线路径（极坐标叠 basemap） | 教学/剖面示意 |
+| ex002 | 地球内部界面 + PcP/PKiKP 射线路径（极坐标叠 basemap） | **已移植为 `scripts/earth_interior.py`** |
 | ★ ex031 | 三维速度模型任意垂直切片（grdtrack 采样 + 极坐标） | 层析成像切片 |
 | ★ ex010/ex012 | 发震时刻着色 / M-T 图（ISO 8601 时间轴 + 多重刻度） | 序列时序分析 |
 | ex009 | 震级圆圈 + 分段统计小面板 | ≈ scripts/seismicity_map.py（统计嵌板是增量） |
@@ -21,7 +21,7 @@
 | ex026 | 地形剖面双图联动 | ≈ scripts/cross_section.py |
 
 中相关：ex003 地形调制纹理、ex004 卫星底图(GCJ-02 纠偏)、ex013 行政区裁剪、
-ex017 一般矢量场、ex029 3D 卫星 draped。5 个精读例（ex009/011/015/026/030）的完整脚本请访问上表 URL——版权归 GMT 中文社区 (CC BY-NC-SA)，本仓库只收录导航。
+ex017 一般矢量场、ex029 3D draped（其 drapegrid 手法已用于 Sagaing 3D 展示图，拼幅坑见 GOTCHAS 8.7）。5 个精读例（ex009/011/015/026/030）的完整脚本请访问上表 URL——版权归 GMT 中文社区 (CC BY-NC-SA)，本仓库只收录导航。
 
 ## 手册章节导航（docs.gmt-china.org/latest/）
 

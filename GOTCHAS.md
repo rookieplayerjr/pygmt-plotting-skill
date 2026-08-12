@@ -289,7 +289,11 @@ PyGMT 0.x 持续重命名参数，老博客/老脚本会报 `unexpected keyword`
 - **本质**：`zscale` 是"每 z 单位多少厘米"，真实地形 z 范围大 → 画布无限拉高；教学例（z 范围几个单位）才适合 zscale。
 - **正确**：真实 DEM 一律 `zsize="3c"`（z 轴总高度定死）；另外小区域 3D 也要吃分辨率规则——`load_earth_relief("15s"/"03s", region=...)`，粗网格会把火山画成光滑馒头。
 
-### 8.7 `grdimage(shading=...)` 要求强度网格与数据网格同维度
+### 8.7 `grdimage(shading=...)`/`grdview(drapegrid=)` 要求与数据网格严格同维度
+- **多片拼幅做 drape 的正确姿势**：先把每片 `xr.interp(lon=relief.lon, lat=relief.lat)` 到
+  地形网格自己的坐标轴上再 `combine_first` —— 维度天然一致。**先 combine_first 再重采样**
+  是错的：两片采样不同 → 联并出**非均匀步长**坐标（实测步长 5e-7~1.5e-3 波动），grdsample
+  被迫猜常数步长，输出维度差 1-2 行列 → drape 静默失效（整面单色）。
 - **现象**：`grdimage [ERROR]: Dimensions of intensity grid do not match that of the data grid!`
 - **解法**：数据和地形梯度分辨率不同时，先 `pygmt.grdsample` 把两者采样到**同一 region + spacing + registration**，再画。
 
