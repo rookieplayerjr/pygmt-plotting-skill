@@ -9,11 +9,6 @@ An [Agent Skill](https://agentskills.io/specification) that turns [PyGMT](https:
 into a figure production line: copy a template, edit one CONFIG block, pick a style,
 ship a publication-ready map.
 
-<p align="center"><img src="previews/kumamoto_wrapped.png" width="720"></p>
-<p align="center"><i>2026 Mj 7.1 Kumamoto earthquake: Sentinel-1 T163 coseismic
-interferogram (16 → 28 Jul 2026), rendered with this skill's house style — cyclic CPT,
-nearest-neighbor guard, GEM fault traces, 2016 Mw 7.0 (white) and 2026 (yellow) epicenters.</i></p>
-
 ## Features
 
 - **Fourteen runnable templates.** The full seismology set of the GMT China community
