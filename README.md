@@ -62,27 +62,6 @@ Templates without a figure here (`displacement_map.py`, `multipanel_components.p
 `wrapped_phase_map.py`, `fault_slip_3d.py`) run standalone on synthetic demo fields —
 their real-data counterparts are the Kumamoto figures on this page.
 
-## Real-data example
-
-<p align="center"><img src="previews/sagaing_ns_offsets.png" width="720"></p>
-
-The 2025 Mw 7.7 Sagaing (Myanmar) earthquake in Sentinel-1 pixel-offset
-tracking (ISCE dense offsets, ascending T143, 2025-03-27 → 04-08): along-track
-offsets rendered with `displacement_map.py` conventions — diverging `vik`
-centered at zero, low-SNR pixels transparent over shaded relief. The ~3 m
-southward jump east of the razor-sharp trace is the right-lateral rupture;
-the star is the USGS epicenter.
-
-## Styles
-
-<p align="center"><img src="previews/styles_all.png" width="860"></p>
-
-Same data — the real Sagaing along-track offset field — six looks; set
-`STYLE = "..."` in any template. All styles keep the same hard
-rules (annotations on W/S only, bottom colorbar with units, depth axes positive-down).
-`style_presets.py` also exposes `style()`, `panel_label()`, `colorbar()`, `coast_colors()`
-for standalone scripts.
-
 ## Community-adapted showpieces
 
 | | |
