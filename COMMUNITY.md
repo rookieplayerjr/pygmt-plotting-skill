@@ -14,9 +14,9 @@
 | ex030 | **三维有限断层滑动栅栏图**（plot3d 多边形 CPT 着色 + 3D 视点 -p160/20） | **已移植为 `scripts/fault_slip_3d.py`**（PyGMT + house 规则）；bash 原版见社区页面 |
 | ex011 | **台站中心方位等距投影**（-JE + SE- 同心震心距圈 30°/60°/90°） | **已移植为 `scripts/station_azimuthal_map.py`**；bash 原版见社区页面 |
 | ex002 | 地球内部界面 + PcP/PKiKP 射线路径（极坐标叠 basemap） | **已移植为 `scripts/earth_interior.py`** |
-| ★ ex031 | 三维速度模型任意垂直切片（grdtrack 采样 + 极坐标） | 层析成像切片 |
-| ★ ex010/ex012 | 发震时刻着色 / M-T 图（ISO 8601 时间轴 + 多重刻度） | 序列时序分析 |
-| ex009 | 震级圆圈 + 分段统计小面板 | ≈ scripts/seismicity_map.py（统计嵌板是增量） |
+| ★ ex031 | 三维速度模型任意垂直切片 | 待移植——需真实速度模型文件（提供即接） |
+| ex010/ex012 | 发震时刻着色 / M-T 图 | **已移植为 `time_colored_seismicity.py` / `mt_plot.py`** |
+| ex009 | 震级圆圈 + 分段统计小面板 | **已移植**：seismicity_map.py 含 STATS_INSET 统计嵌板 |
 | ex015 | GPS 速度场 + 误差椭圆 + inset 图例 | ≈ scripts/velocity_field_map.py |
 | ex026 | 地形剖面双图联动 | ≈ scripts/cross_section.py |
 
@@ -62,3 +62,5 @@ Windows 走 UTF-8 Beta 区域设置 + Ghostscript ≥10.03 自动 cidfmap（详�
 - **色名体系**：663 个命名色 + light/dark 前缀（`lightseagreen`），HSV/CMYK 直写均可。
 - **oneliner 模式**：`gmt coast ... -pdf map` 单行出图，调试快，生产仍用 begin/end。
 - **卫星底图纠偏**：国内 Amap/Google 瓦片是 GCJ-02 坐标，叠 WGS84 数据前必须纠偏（ex004）。
+
+地震分区其余卡片移植：meca 专图 = `focal_mechanisms.py`；sac 波形 = `record_section.py`（真实 IU/II LHZ 数据打包）；grdshake 震动图 = `shaking_intensity.py`（模型场，图上明示 MODELED）。

@@ -16,11 +16,11 @@ nearest-neighbor guard, GEM fault traces, 2016 Mw 7.0 (white) and 2026 (yellow) 
 
 ## Features
 
-- **Nine runnable templates.** Displacement map, seismicity map with focal mechanisms,
-  map + depth section, E/N/U component panels, GPS velocity field, wrapped interferogram,
-  3D finite-fault slip fence, station-centered teleseismic geometry. Each runs standalone
-  in seconds (two on a bundled real USGS catalog); you edit only the CONFIG block and the
-  data section.
+- **Fourteen runnable templates.** The full seismology set of the GMT China community
+  gallery (catalog map, depth section, beachballs, M-T, time-colored epicenters, waveform
+  record section, shaking intensity, station geometry, Earth interior, 3D slip fence) plus
+  InSAR/geodesy staples (displacement, wrapped interferogram, GPS velocities, E/N/U panels).
+  Each runs standalone; you edit only the CONFIG block and the data section.
 - **Six styles, one switch.** `house` · `journal` · `classic` · `minimal` ·
   `presentation` · `dark` — `STYLE = "dark"` restyles the entire figure.
 - **Condensed reference + symptom-indexed gotchas.** The failures that cost an afternoon
@@ -42,25 +42,31 @@ git clone https://github.com/rookieplayerjr/pygmt-plotting-skill.git ~/.workbudd
 ```
 
 The skill is discovered automatically from `SKILL.md`; start a new session afterwards.
-Rendering requires PyGMT/GMT (`conda install -c conda-forge pygmt`); the reference material
-is useful without them.
+Rendering requires PyGMT/GMT (`conda install -c conda-forge pygmt`); `record_section.py`
+additionally needs obspy. The reference material is useful without them.
 
 ## Templates
 
-Nine runnable templates; every figure below is real data — the bundled USGS
-Japan-trench catalog (public domain, `scripts/data/japan_trench_usgs.csv`) or
-Sentinel-1/GEONET products of the 2026 Mj 7.1 Kumamoto earthquake:
+The template set mirrors the seismology section of the
+[GMT China community gallery](https://docs.gmt-china.org/latest/gallery/),
+re-implemented in PyGMT. Figures are real data: the bundled USGS Japan-trench
+catalog (public domain), bundled EarthScope waveforms, or GCMT-approximate
+mechanisms — the shaking map is a clearly-labeled model field:
 
 | | |
 |---|---|
 | <img src="previews/seismicity_map.png" width="420"> | <img src="previews/cross_section.png" width="420"> |
-| `seismicity_map.py` — USGS Tohoku catalog (7 708 events, M ≥ 4.5), depth-colored, magnitude-sized; the 2011 Mw 9.1 thrust mechanism stands out at scale | `cross_section.py` — the same catalog projected on a trench-perpendicular section: the Wadati-Benioff zone dips west off the profile, depth reading positive down |
-| <img src="previews/kumamoto_gnss.png" width="420"> | <img src="previews/station_azimuthal_map.png" width="420"> |
-| `velocity_field_map.py` conventions on real GEONET coseismic offsets of the 2026 Kumamoto earthquake (87 cm peak, arrows ≥ 2 cm, all stations dotted) | `station_azimuthal_map.py` — azimuthal-equidistant teleseismic geometry with epicentral-distance rings; the six labeled epicenters are real events |
+| `seismicity_map.py` — depth-colored, magnitude-sized catalog with magnitude-class count panel | `cross_section.py` — trench-perpendicular section: the Wadati-Benioff zone, depth positive-down |
+| <img src="previews/focal_mechanisms.png" width="420"> | <img src="previews/time_colored_seismicity.png" width="420"> |
+| `focal_mechanisms.py` — notable-event beachballs, manual Mw sizing, depth CPT | `time_colored_seismicity.py` — origin-time-colored epicenters (sequence migration) |
+| <img src="previews/mt_plot.png" width="420"> | <img src="previews/record_section.png" width="420"> |
+| `mt_plot.py` — magnitude-time bars on a datetime axis, mainshocks starred | `record_section.py` — real IU/II LHZ traces of the 2026 Kumamoto quake with TauP P/S curves |
+| <img src="previews/shaking_intensity.png" width="420"> | <img src="previews/station_azimuthal_map.png" width="420"> |
+| `shaking_intensity.py` — ShakeMap-style modeled intensity around a real epicenter | `station_azimuthal_map.py` — azimuthal-equidistant geometry with distance rings |
 
-Templates without a figure here (`displacement_map.py`, `multipanel_components.py`,
-`wrapped_phase_map.py`, `fault_slip_3d.py`) run standalone on synthetic demo fields —
-their real-data counterparts are the Kumamoto figures on this page.
+Non-seismology templates (`displacement_map.py`, `velocity_field_map.py`,
+`wrapped_phase_map.py`, `multipanel_components.py`, `fault_slip_3d.py`) remain in
+`scripts/` and run standalone.
 
 ## Community-adapted showpieces
 

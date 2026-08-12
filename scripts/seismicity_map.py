@@ -30,6 +30,7 @@ SIZE_SCALE = 0.0025             # circle size = SIZE_SCALE * 2**mag (cm). TUNE T
                                # saturates the map -> drop it, add transparency=40,
                                # thin the pen. Epicenters must stay individually resolvable.
 PANEL = "A"
+STATS_INSET = True             # ex009-style magnitude-class count panel (top-right)
 OUT = "seismicity_map.png"
 # ----------------------------------------
 
@@ -66,6 +67,21 @@ with style(STYLE):
     if len(mechs):
         fig.meca(spec=mechs, scale="0.4c", convention="aki", cmap=True)
 
+    # magnitude-class legend with counts (GMT China ex009 pattern). The inset
+    # draws NO axis annotations (suppressed anyway, GOTCHAS 8.1) — symbols+text only.
+    if STATS_INSET:
+        classes = [(4.5, 5.5), (5.5, 6.5), (6.5, 8.0), (8.0, 10.0)]
+        with fig.inset(position="jTR+w4.2c/3.4c+o0.15c", box="+gwhite+p0.8p,black"):
+            for k, (m0, m1) in enumerate(classes):
+                n = int(((cat.mag >= m0) & (cat.mag < m1)).sum())
+                y = 0.85 - 0.22 * k
+                mrep = (m0 + min(m1, 9.1)) / 2
+                fig.plot(x=[0.13], y=[y], style=f"c{SIZE_SCALE * 2 ** mrep:.3f}c",
+                         fill="gray40", pen="0.3p,black",
+                         region=[0, 1, 0, 1], projection="X4.2c/3.4c")
+                lab = f"M {m0:.1f}-{m1:.1f}" if m1 < 10 else f"M >= {m0:.1f}"
+                fig.text(x=0.28, y=y, text=f"{lab}: {n}", justify="ML",
+                         font="9p,Helvetica,black")
     panel_label(fig, PANEL, style_name=STYLE)
     colorbar(fig, "Hypocenter depth (km)", style_name=STYLE, width=8)
 

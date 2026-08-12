@@ -64,6 +64,11 @@ in ~5 s with synthetic demo data shaped like the real use case:
 | 3D finite-fault slip distribution (fence diagram) | `scripts/fault_slip_3d.py` (plot3d polygons + -Z headers; depth positive-down) |
 | Station-centered teleseismic geometry (distance rings) | `scripts/station_azimuthal_map.py` (azimuthal equidistant + `style="E-"` rings) |
 | Earth-interior shells + ray-path diagram | `scripts/earth_interior.py` (polar P projection, Cartesian chords in polar coords) |
+| Focal-mechanism (beachball) overview map | `scripts/focal_mechanisms.py` (manual Mw sizing — `+m` is flat, GOTCHAS 8.3) |
+| Magnitude-time sequence plot | `scripts/mt_plot.py` (datetime axis, multi-segment -Z bars) |
+| Time-colored epicenter map (sequence migration) | `scripts/time_colored_seismicity.py` (decimal-year CPT) |
+| Teleseismic waveform record section | `scripts/record_section.py` (needs obspy; bundled real LHZ data + TauP curves) |
+| ShakeMap-style intensity map | `scripts/shaking_intensity.py` (modeled field — label it as such) |
 
 **No scripts/ match? Check [GALLERY.md](GALLERY.md)'s 13 templates SECOND** — copy the matching
 snippet before writing anything fresh: global/regional basemap #1, relief+sampled points #2,
