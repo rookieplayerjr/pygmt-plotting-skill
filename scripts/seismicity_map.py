@@ -21,35 +21,34 @@ from style_presets import coast_colors, colorbar, panel_label, style
 
 # ---------------- CONFIG ----------------
 STYLE = "house"                # house / journal / classic / minimal / presentation / dark
-REGION = [-118.5, -117.0, 35.0, 36.2]
+REGION = [131, 152, 33, 47]
 PROJECTION = "M12c"
-DEPTH_RANGE = [0, 15]          # km, for the CPT
+DEPTH_RANGE = [0, 500]         # km, for the CPT
 DEPTH_CMAP = "inferno"         # sequential; reversed below so shallow = bright
-SIZE_SCALE = 0.015             # circle size = SIZE_SCALE * 2**mag (cm). TUNE THIS:
+SIZE_SCALE = 0.004             # circle size = SIZE_SCALE * 2**mag (cm). TUNE THIS:
                                # dense catalog (>200 events in a tight region) or Mmax>4.5
-                               # saturates the map -> drop to ~0.008, add transparency=40,
+                               # saturates the map -> drop it, add transparency=40,
                                # thin the pen. Epicenters must stay individually resolvable.
 PANEL = "A"
 OUT = "seismicity_map.png"
 # ----------------------------------------
 
-# Demo catalog. Replace with your own (e.g. from USGS / SCEC).
-rng = np.random.default_rng(1)
-N = 250
+# Demo catalog: REAL Japan-trench seismicity (PyGMT built-in sample, USGS-derived).
+# Replace with your own catalog (lon, lat, depth, mag), e.g. from USGS/SCEC.
+jq = pygmt.datasets.load_sample_data(name="japan_quakes")
 cat = pd.DataFrame({
-    "lon": rng.uniform(REGION[0], REGION[1], N),
-    "lat": rng.uniform(REGION[2], REGION[3], N),
-    "depth": rng.uniform(1, 14, N),
-    "mag": rng.uniform(1.0, 4.5, N),
+    "lon": jq.longitude, "lat": jq.latitude,
+    "depth": jq.depth_km, "mag": jq.magnitude,
 })
 
-# Demo focal mechanisms (Aki convention). Replace or set to [] to skip.
+# Demo focal mechanisms (Aki convention): interplate-thrust style at the two largest
+# events, for illustration. Replace with GCMT solutions or set to [] to skip.
+big = cat.nlargest(2, "mag")
 mechs = pd.DataFrame({
-    "longitude": [-117.8, -117.4],
-    "latitude": [35.5, 35.9],
-    "depth": [6.0, 9.0],
-    "strike": [320, 45], "dip": [80, 60], "rake": [-170, 90],
-    "magnitude": [5.2, 4.8],
+    "longitude": big.lon.values, "latitude": big.lat.values,
+    "depth": big.depth.values,
+    "strike": [200, 195], "dip": [20, 25], "rake": [90, 95],
+    "magnitude": big.mag.values,
 })
 
 fig = pygmt.Figure()

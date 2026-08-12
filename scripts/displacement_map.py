@@ -13,6 +13,7 @@ import sys
 
 import numpy as np
 import pygmt
+import xarray as xr
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(1, os.path.expanduser("~/.claude/skills/pygmt-plotting/scripts"))  # fallback when this file is copied elsewhere
@@ -20,25 +21,41 @@ from style_presets import colorbar, panel_label, style
 
 # ---------------- CONFIG ----------------
 STYLE = "house"                           # house / journal / classic / minimal / presentation / dark
-REGION = [-120.0, -119.0, 35.0, 35.8]   # [W, E, S, N]
+REGION = [-118.2, -117.2, 35.4, 36.15]  # [W, E, S, N] — Ridgecrest 2019 area
 PROJECTION = "M12c"                       # Mercator, 12 cm wide
 CMAP = "vik"                              # diverging: vik / roma / polar
-CLIM = [-30, 30]                          # color limits (e.g. mm)
-UNIT = "LOS displacement (mm)"
+CLIM = [-30, 30]                          # color limits (e.g. cm)
+UNIT = "LOS displacement (cm)"
 PANEL = "A"                               # panel label (uppercase, no parentheses)
-RELIEF_RES = "15s"                        # earth_relief resolution
-INSET = None                              # "globe" = corner locator globe OVERLAID on the
+RELIEF_RES = "03s"                        # earth_relief resolution (<=1 deg region -> 03s/15s)
+INSET = "globe"                           # "globe" = corner locator globe OVERLAID on the
                                           # map (fig.inset, GALLERY #4) — never a detached
                                           # globe floating outside the frame
 OUT = "displacement_map.png"
 # ----------------------------------------
 
-# Demo data: a Gaussian uplift blob. Replace with your observations / grid.
-rng = np.random.default_rng(0)
-lon = rng.uniform(REGION[0], REGION[1], 400)
-lat = rng.uniform(REGION[2], REGION[3], 400)
-c_lon, c_lat = -119.5, 35.4
-value = 28 * np.exp(-(((lon - c_lon) / 0.12) ** 2 + ((lat - c_lat) / 0.10) ** 2))
+# Demo data: a gridded coseismic LOS field with the four-quadrant pattern of a NW-SE
+# strike-slip rupture (Ridgecrest-like), draped semi-transparently over real terrain.
+# Replace `los` with your own grid (xarray/NetCDF/GeoTIFF) — or scatter points, see
+# the commented scatter branch below.
+F_AZ = np.radians(-40)                    # fault strike (NW-SE)
+F_LON, F_LAT = -117.55, 35.77             # fault center
+lons = np.linspace(REGION[0], REGION[1], 700)
+lats = np.linspace(REGION[2], REGION[3], 550)
+LON, LAT = np.meshgrid(lons, lats)
+xf = (LON - F_LON) * np.cos(F_AZ) + (LAT - F_LAT) * np.sin(F_AZ)   # along-strike
+yf = -(LON - F_LON) * np.sin(F_AZ) + (LAT - F_LAT) * np.cos(F_AZ)  # fault-normal
+# four-quadrant butterfly of a strike-slip event (dipole along AND across strike),
+# with the LOS asymmetry that makes one lobe pair dominate
+u, v = xf / 0.28, yf / 0.11
+los = 165 * u * v * np.exp(-u ** 2 - v ** 2) * (1 + 0.35 * np.tanh(v))
+los_grid = xr.DataArray(los, coords=[("lat", lats), ("lon", lons)])
+los_grid.gmt.gtype = 1
+los_grid.gmt.registration = 0
+# fault surface trace (along-strike line through the center)
+t = np.linspace(-0.35, 0.35, 50)
+trace_lon = F_LON + t * np.cos(F_AZ)
+trace_lat = F_LAT + t * np.sin(F_AZ)
 
 fig = pygmt.Figure()
 with style(STYLE):
@@ -48,14 +65,14 @@ with style(STYLE):
     fig.basemap(region=REGION, projection=PROJECTION, frame=["WSne", "xaf", "yaf"])
     fig.grdimage(grid=relief, shading=shade, cmap="gray", projection=PROJECTION)
 
-    # 2. data layer
-    pygmt.makecpt(cmap=CMAP, series=[CLIM[0], CLIM[1], (CLIM[1] - CLIM[0]) / 40.0], continuous=True)
-    fig.plot(x=lon, y=lat, fill=value, cmap=True, style="c0.18c", pen="0.25p,black")
-    # For a CONTINUOUS field from scattered points, grid first then grdimage — never feed
-    # scatter straight to xyz2grd (vertical-stripe artifact, GOTCHAS 3.5):
-    #   binned = pygmt.blockmean(data=..., region=REGION, spacing="30s")
-    #   grid   = pygmt.surface(data=binned, region=REGION, spacing="30s", tension=0.35)
-    #   fig.grdimage(grid=grid, cmap=True, transparency=30)
+    # 2. data layer: semi-transparent gridded field over the grayscale relief
+    pygmt.makecpt(cmap=CMAP, series=[CLIM[0], CLIM[1]], continuous=True)
+    fig.grdimage(grid=los_grid, cmap=True, transparency=35, nan_transparent=True)
+    fig.plot(x=trace_lon, y=trace_lat, pen="1.2p,black")   # fault surface trace
+    # Scatter alternative (GPS/leveling points):
+    #   fig.plot(x=lon, y=lat, fill=value, cmap=True, style="c0.18c", pen="0.25p,black")
+    # Scatter -> continuous grid: blockmean + surface first — never feed scatter
+    # straight to xyz2grd (vertical-stripe artifact, GOTCHAS 3.5).
 
     # 3. coastline / context
     fig.coast(shorelines="0.5p,black", borders="2/0.3p,gray40", resolution="f")

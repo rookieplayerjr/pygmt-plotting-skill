@@ -33,13 +33,19 @@ DEPTH_MAX = 15.0        # km, section depth axis
 OUT = "cross_section.png"
 # ----------------------------------------
 
+# Demo: an aftershock cloud on a NE-dipping structure along the A-B azimuth — depth
+# increases across strike so the section shows a coherent dip, like a real sequence.
 rng = np.random.default_rng(2)
-N = 200
+N = 220
+along = rng.uniform(0, 1, N)                      # position along the zone
+across = rng.normal(0, 0.045, N)                  # scatter across the zone
+zone_az = np.arctan2(0.8, 1.1)                    # A->B direction
 eqs = pd.DataFrame({
-    "lon": rng.uniform(REGION[0], REGION[1], N),
-    "lat": rng.uniform(REGION[2], REGION[3], N),
-    "depth": rng.uniform(1, 14, N),
-    "mag": rng.uniform(1.0, 4.0, N),
+    "lon": -118.3 + along * 1.1 + across * np.sin(zone_az),
+    "lat": 35.2 + along * 0.8 - across * np.cos(zone_az),
+    # deepens toward B along the zone -> the A-B section shows a coherent dipping band
+    "depth": np.clip(2.5 + 9.5 * along + rng.normal(0, 1.0, N), 1, 14.5),
+    "mag": rng.gamma(2.0, 0.55, N) + 1.0,         # Gutenberg-Richter-ish, M1-4.5
 })
 
 relief = pygmt.datasets.load_earth_relief(resolution="15s", region=REGION)

@@ -21,26 +21,33 @@ from style_presets import STYLES, colorbar, style
 
 # ---------------- CONFIG ----------------
 STYLE = "house"            # house / journal / classic / minimal / presentation / dark
-REGION = [-120.0, -119.0, 35.0, 35.8]
+REGION = [-118.2, -117.2, 35.4, 36.15]   # Ridgecrest 2019 area
 PROJECTION = "M?"          # '?' lets subplot auto-size each panel
 CMAP = "vik"
-CLIM = [-30, 30]
-UNIT = "Displacement (mm)"
+CLIM = [-40, 40]
+UNIT = "Displacement (cm)"
 TITLES = ["East", "North", "Up"]
 OUT = "multipanel_components.png"
 # ----------------------------------------
 
-# Demo grids: three offset Gaussian blobs. Replace with your component grids.
-lons = np.linspace(REGION[0], REGION[1], 120)
-lats = np.linspace(REGION[2], REGION[3], 100)
+# Demo grids: physically consistent E/N/U of a NW-SE right-lateral rupture — E and N are
+# the anti-symmetric strike-slip quadrants projected on each axis, U is a weak compact
+# dipole. Replace with your decomposed component grids.
+lons = np.linspace(REGION[0], REGION[1], 300)
+lats = np.linspace(REGION[2], REGION[3], 240)
 LON, LAT = np.meshgrid(lons, lats)
-def blob(c_lon, c_lat, amp):
-    return amp * np.exp(-(((LON - c_lon) / 0.12) ** 2 + ((LAT - c_lat) / 0.10) ** 2))
-grids = [
-    xr.DataArray(blob(-119.5, 35.4, -22), coords=[("lat", lats), ("lon", lons)]),
-    xr.DataArray(blob(-119.6, 35.5, 15), coords=[("lat", lats), ("lon", lons)]),
-    xr.DataArray(blob(-119.45, 35.35, 28), coords=[("lat", lats), ("lon", lons)]),
-]
+F_AZ = np.radians(-40)
+F_LON, F_LAT = -117.55, 35.77
+xf = (LON - F_LON) * np.cos(F_AZ) + (LAT - F_LAT) * np.sin(F_AZ)
+yf = -(LON - F_LON) * np.sin(F_AZ) + (LAT - F_LAT) * np.cos(F_AZ)
+u, v = xf / 0.28, yf / 0.11
+horiz = 2.7 * v * np.exp(-u ** 2 - v ** 2) * (1 + 0.3 * np.tanh(u))  # fault-parallel slip
+comp = {
+    "East": 40 * horiz * np.cos(F_AZ),
+    "North": 40 * horiz * np.sin(F_AZ),
+    "Up": 30 * u * v * np.exp(-u ** 2 - v ** 2),
+}
+grids = [xr.DataArray(comp[t], coords=[("lat", lats), ("lon", lons)]) for t in TITLES]
 for g in grids:           # mark as geographic, gridline-registered
     g.gmt.gtype = 1
     g.gmt.registration = 0
