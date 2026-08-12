@@ -61,6 +61,8 @@ in ~5 s with synthetic demo data shaped like the real use case:
 | Multi-panel component grids (E/N/U, data-model-residual) | `scripts/multipanel_components.py` |
 | GPS/GNSS vectors + error ellipses | `scripts/velocity_field_map.py` (velo arrows fail **silently** — GOTCHAS §9) |
 | Wrapped interferogram / fringes | `scripts/wrapped_phase_map.py` (cyclic CPT + `interpolation="n"` + moiré guard) |
+| 3D finite-fault slip distribution (fence diagram) | `scripts/fault_slip_3d.py` (plot3d polygons + -Z headers; depth positive-down) |
+| Station-centered teleseismic geometry (distance rings) | `scripts/station_azimuthal_map.py` (azimuthal equidistant + `style="E-"` rings) |
 
 **No scripts/ match? Check [GALLERY.md](GALLERY.md)'s 13 templates SECOND** — copy the matching
 snippet before writing anything fresh: global/regional basemap #1, relief+sampled points #2,

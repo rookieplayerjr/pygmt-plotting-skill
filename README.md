@@ -16,9 +16,10 @@ nearest-neighbor guard, GEM fault traces, 2016 Mw 7.0 (white) and 2026 (yellow) 
 
 ## Features
 
-- **Six runnable templates.** Displacement map, seismicity map with focal mechanisms,
-  map + depth section, E/N/U component panels, GPS velocity field, wrapped interferogram.
-  Each runs standalone in seconds; you edit only the CONFIG block and the data section.
+- **Eight runnable templates.** Displacement map, seismicity map with focal mechanisms,
+  map + depth section, E/N/U component panels, GPS velocity field, wrapped interferogram,
+  3D finite-fault slip fence, station-centered teleseismic geometry. Each runs standalone
+  in seconds; you edit only the CONFIG block and the data section.
 - **Six styles, one switch.** `house` · `journal` · `classic` · `minimal` ·
   `presentation` · `dark` — `STYLE = "dark"` restyles the entire figure.
 - **Condensed reference + symptom-indexed gotchas.** The failures that cost an afternoon
@@ -55,6 +56,8 @@ Every image below is the direct, unedited output of its script:
 | `multipanel_components.py` — E/N/U decomposition sharing one CPT and colorbar | `velocity_field_map.py` — GPS vectors, 1σ ellipses, reference arrow, scale bar |
 | <img src="previews/wrapped_phase_map.png" width="420"> | <img src="previews/displacement_map.png" width="420"> |
 | `wrapped_phase_map.py` — wrapped fringes with cyclic CPT + nearest-neighbor guard, π-annotated colorbar | `displacement_map.py` — gridded LOS over terrain, fault trace, locator inset |
+| <img src="previews/fault_slip_3d.png" width="420"> | <img src="previews/station_azimuthal_map.png" width="420"> |
+| `fault_slip_3d.py` — 3D finite-fault slip fence via `plot3d` polygons, depth reading positive down | `station_azimuthal_map.py` — azimuthal-equidistant teleseismic geometry with epicentral-distance rings |
 
 ## Real-data example
 
@@ -105,7 +108,9 @@ for standalone scripts.
 ## Acknowledgements
 
 The community-sourced material references the [GMT China community manual](https://docs.gmt-china.org)
-(CC BY-NC-SA); colormaps follow Crameri's [Scientific Colour Maps](https://www.fabiocrameri.ch/colourmaps/).
+(CC BY-NC-SA); `fault_slip_3d.py` and `station_azimuthal_map.py` are PyGMT re-implementations
+of the plotting patterns in their gallery ex030 and ex011. Colormaps follow Crameri's
+[Scientific Colour Maps](https://www.fabiocrameri.ch/colourmaps/).
 
 ## License
 
