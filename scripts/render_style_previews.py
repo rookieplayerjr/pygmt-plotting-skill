@@ -1,7 +1,7 @@
 """Render the same demo map in every style preset -> previews/style_<name>.png.
 
 Run after editing style_presets.py to regenerate the preview sheet embedded in
-STYLES.md. Synthetic data only — no downloads, runs offline in ~15 s.
+the styles section of SKILL.md. Synthetic data only — no downloads, runs offline in ~15 s.
 """
 
 import os

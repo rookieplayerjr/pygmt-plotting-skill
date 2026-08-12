@@ -79,13 +79,10 @@ Non-seismology templates (`displacement_map.py`, `velocity_field_map.py`,
 
 | File | Contents |
 |---|---|
-| `SKILL.md` | Entry point: template routing, style routing, house rules, load discipline |
-| `REFERENCE.md` | Condensed PyGMT API (verified against 0.17.0) |
+| `SKILL.md` | Entry point: template & style routing, house rules, the mandatory QC loop |
+| `REFERENCE.md` | Condensed PyGMT API (verified against 0.17.0) + publication craft |
 | `GOTCHAS.md` | Symptom-indexed pitfalls: region/CPT/grids/layout/meca/velo/vectors |
 | `GALLERY.md` | 13 ready-to-adapt scenario snippets |
-| `STYLES.md` | The six styles: configs, previews, dark-mode notes, how to extend |
-| `CRAFT.md` | Publication craft: layer order, colormaps, hillshade, export |
-| `QC.md` | Pre-delivery checklist loop with a token-economy protocol |
 | `COMMUNITY.md` | Curated navigation of the GMT China community manual, incl. CJK labels |
 | `MANUAL.html` | Self-contained handbook (Chinese) covering all of the above |
 
