@@ -38,13 +38,14 @@ OUT = "seismicity_map.png"
 cat = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "data", "japan_trench_usgs.csv"))
 
-# Demo focal mechanisms (Aki convention): interplate-thrust style at the two largest
-# events, for illustration. Replace with GCMT solutions or set to [] to skip.
-big = cat.nlargest(2, "mag")
+# Focal mechanisms for the two largest events, GCMT-approximate values
+# (2011 Tohoku Mw9.1: 203/10/88; 2003 Tokachi-oki Mw8.3: 230/20/109).
+# Replace with your GCMT solutions or set mechs = mechs.iloc[:0] to skip.
+big = cat.nlargest(2, "mag").sort_values("mag", ascending=False)
 mechs = pd.DataFrame({
     "longitude": big.lon.values, "latitude": big.lat.values,
     "depth": big.depth.values,
-    "strike": [200, 195], "dip": [20, 25], "rake": [90, 95],
+    "strike": [203, 230], "dip": [10, 20], "rake": [88, 109],
     "magnitude": big.mag.values,
 })
 
