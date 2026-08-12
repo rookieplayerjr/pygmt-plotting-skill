@@ -64,10 +64,11 @@ region="JP+r3"            # +r on a country code → pad by 3°
 - Edge letters: `WSNE` (axis+ticks+annotations), `wsne` (no annotations), `lbtr` (axis only).
 - Interval letters after axis name: `a`=annotation/major, `f`=minor tick, `g`=grid → `xa30f7.5g15`.
 - Modifiers: `+lLabel` (axis label — **Cartesian only**), `+tTitle`, `+uUnit`.
+- **GMT 6.6 strictness**: frame *settings* (edge letters, `+t`, `+g`) may appear in only ONE list entry. `["WSne", "af", "+tTitle"]` hard-fails (`Option -B parsing failure … Offending option -BWSne`) because `WSne` and `+tTitle` are two frame-settings invocations → write `["WSne+tTitle", "af"]`. A lone `["af", "+tTitle"]` (no edge letters) is still legal.
 ```python
 frame=True                                       # = "af" auto
 frame=["WSne", "xaf", "yaf"]                     # annotate left+bottom only (house style)
-frame=["WSne", "xa30f7.5g15", "yaf", "+tTitle"]  # x: annot 30, tick 7.5, grid 15
+frame=["WSne+tTitle", "xa30f7.5g15", "yaf"]      # title MUST ride the edge-letters entry
 ```
 
 ---
@@ -205,6 +206,7 @@ fig.colorbar(position="JBC+w8c/0.4c+h+o0c/0.8c",
 - `load_earth_relief(resolution="01d", region=None, registration=None, data_source="igpp", use_srtm=False)` — resolutions `01d 30m 20m 15m 10m 06m 05m 04m 03m 02m 01m 30s 15s 03s 01s`; **resolutions finer than 05m require `region`**.
 - `load_earth_age`, `load_earth_geoid`, `load_earth_magnetic_anomaly` (same signature shape).
 - `load_sample_data("name")` — e.g. `"ocean_ridge_points"`, `"fractures"`, `"japan_quakes"`.
+- **Plate boundaries (Bird 2003 PB2002)**: NOT on the GMT remote server (`@PB2002_boundaries.txt` 404s — verified). Download the PB2002 boundary file once (Bird 2003 supplementary data; the GMT-format `pb2002_boundaries.gmt` ships with several open finite-fault packages) and plot it directly: `fig.plot(data="pb2002_boundaries.gmt", pen="0.8p,firebrick")` — multi-segment GMT file. Never sketch synthetic "boundaries" on real maps.
 
 **Grid → grid** (return DataArray when `outgrid=None`):
 | Function | Purpose |
@@ -234,9 +236,9 @@ grid.gmt.registration = 0   # 0=gridline, 1=pixel
 
 ## 8. Seismology / geodesy: meca & velo
 
-**`fig.meca(spec, scale, convention, component, longitude, latitude, depth, plot_longitude, plot_latitude, offset, compression_fill="black", extension_fill="white", pen, cmap, nodal, outline)`** — focal mechanisms (beachballs).
+**`fig.meca(spec, scale, convention, component, longitude, latitude, depth, plot_longitude, plot_latitude, offset, compressionfill="black", extensionfill="white", pen, cmap, nodal, outline)`** — focal mechanisms (beachballs).
 
-> ⚠️ Python params use **underscores**: `compression_fill`, `extension_fill`, `plot_longitude`.
+> ⚠️ **v0.17 param naming is mixed**: fill params have NO underscore — `compressionfill`, `extensionfill` (meca), `uncertaintyfill` (velo); the old underscore forms (`compression_fill`…) now **hard-fail** with `Unrecognized parameter`. Position/name params KEEP underscores: `plot_longitude`, `plot_latitude`, `event_name`.
 
 Convention → spec fields (dict keys / DataFrame columns; convention auto-inferred from dict/DataFrame keys):
 | convention | fields |
@@ -251,7 +253,7 @@ Convention → spec fields (dict keys / DataFrame columns; convention auto-infer
 ```python
 focal = {"strike": 330, "dip": 30, "rake": 90, "magnitude": 3}
 fig.meca(spec=focal, scale="1c", longitude=-124.3, latitude=48.1, depth=12,
-         compression_fill="red", extension_fill="cornsilk", pen="0.5p,gray30")
+         compressionfill="red", extensionfill="cornsilk", pen="0.5p,gray30")
 
 # Many events colored by depth. With a DataFrame spec, longitude/latitude/depth must be
 # COLUMNS in df — do NOT also pass them as kwargs (raises "All arrays must have same size").
@@ -261,7 +263,7 @@ fig.meca(spec=df, scale="0.4c", cmap=True)   # df has lon/lat/depth/strike/dip/r
 # and pass offset="+s0.15c+p0.5p,blue" (tie-line + small circle at the true location).
 ```
 
-**`fig.velo(data, spec, pen, fill, uncertainty_fill, line, vector, zvalue, cmap)`** — GPS/velocity fields. `spec` prefix sets symbol AND column order:
+**`fig.velo(data, spec, pen, fill, uncertaintyfill, line, vector, zvalue, cmap)`** — GPS/velocity fields. `spec` prefix sets symbol AND column order:
 | prefix | symbol | columns |
 |---|---|---|
 | `e[scale/]conf[+ffont]` | velocity ellipse (E,N) | `lon lat v_e v_n sig_e sig_n corr_EN [site]` |
@@ -270,7 +272,7 @@ fig.meca(spec=df, scale="0.4c", cmap=True)   # df has lon/lat/depth/strike/dip/r
 | `w...` | rotational wedge | `lon lat rot σ` |
 | `x[scale]` | strain crosses | `lon lat eps1 eps2 azimuth` |
 ```python
-fig.velo(data=df, spec="e0.2/0.39+f18", uncertainty_fill="lightblue1",
+fig.velo(data=df, spec="e0.2/0.39+f18", uncertaintyfill="lightblue1",
          pen="0.6p,red", line=True, vector="0.3c+p1p+e+gred")
 ```
 `e0.2/0.39`: 0.2 = velocity→length scale, 0.39 ≈ 1σ ellipse (0.95 = 95%). Color by magnitude: `cmap="turbo", zvalue="m"`.
@@ -346,8 +348,8 @@ Common keys: `MAP_FRAME_TYPE` (plain/fancy), `MAP_FRAME_PEN`, `FONT_TITLE`, `FON
 2. `projection` width must carry a unit (`M12c`), else error.
 3. Axis labels `+l` work **only on Cartesian (X)** projections — geographic maps reject them.
 4. `plot3d` needs a 6-value `region` plus `zscale`/`perspective`.
-5. meca/velo Python params use **underscores** (`compression_fill`), and `velo` `spec` prefix dictates column order — wrong order silently mis-plots.
+5. meca/velo fill params have **no underscore** in v0.17 (`compressionfill`, `uncertaintyfill`; underscore forms hard-fail), and `velo` `spec` prefix dictates column order — wrong order silently mis-plots.
 6. `project` outputs distance as `p`, perpendicular as `q`; need `unit=True` for km.
 7. Shared multi-panel colorbar: call `fig.colorbar` **outside** the `subplot` block, anchored with `j<corner>+o`.
 8. `makecpt`/`grd2cpt` with no `output=` set the session CPT — later commands don't need `cmap=` again.
-9. Newer gallery examples import `from pygmt.params import Box, Position`. On older PyGMT use string modifiers instead: `position="jTL+o0.2c"`, `box="+p1p,black"`.
+9. Newer gallery examples import `from pygmt.params import Box, Pattern` (v0.17 ships exactly these two classes — no `Position`). String modifiers remain fully supported and portable: `position="jTL+o0.2c"`, `box="+p1p,black"`.

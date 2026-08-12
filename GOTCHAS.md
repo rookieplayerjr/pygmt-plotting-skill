@@ -35,6 +35,11 @@
 
 ### 1.6 地理 vs 笛卡尔 gtype 导致错位（见 §3.1）
 
+### 1.7 GMT 6.6 起 frame 列表里 `"+tTitle"` 不能单独成项（实测硬报错）
+- **现象**：`frame=["WSne", "xaf", "yaf", "+tTitle"]` 报 `Option -B parsing failure ... Offending option -BWSne`。老教程/老脚本大量用这种写法。
+- **本质**：GMT 6.6 严格化 —— frame *settings*（边框字母、`+t` 标题、`+g` 底色）只允许出现在**一个** `-B` 里；`"WSne"` 和 `"+tTitle"` 分列 = 两次 frame-settings 调用 → 拒绝。
+- **正确**：合并写 `frame=["WSne+tTitle", "xaf", "yaf"]`。无边框字母时 `["af", "+tTitle"]` 仍合法。
+
 ---
 
 ## 2. 颜色 / CPT
@@ -113,7 +118,17 @@
 - **正确**：构建全球网格时让经度含冗余端点 `lon = np.arange(0, 361, 1)`（0 到 360 闭区间）。
 - 来源：<https://github.com/GenericMappingTools/pygmt/issues/3331>、<https://github.com/GenericMappingTools/pygmt/issues/375>
 
-### 3.5 pixel vs gridline registration
+### 3.5 散点直接喂 xyz2grd → 竖条纹/条带伪影（别因此弃用 PyGMT）
+- **现象**：站点/散点数据 `pygmt.xyz2grd` 后 `grdimage` 出现整列竖条纹或大片空洞；实测有 agent 因此判"GMT 不适合"改投 matplotlib。
+- **本质**：`xyz2grd` 只做**已在规则网格上**的 xyz 三元组装箱，不做插值；散点落不满网格 → 空列/条带。
+- **正确**（REFERENCE §7 的散点→网格标准链）：
+  ```python
+  binned = pygmt.blockmean(data=df, region=region, spacing="30s")   # 先去混叠
+  grid   = pygmt.surface(data=binned, region=region, spacing="30s", tension=0.35)
+  ```
+  站点稀疏想限制外推：`pygmt.nearneighbor(..., search_radius="5k")`。
+
+### 3.6 pixel vs gridline registration
 - earth_relief 默认 gridline，但 `"15s"` 只有 pixel。混用会有半格偏移。
 - `load_earth_relief(resolution=..., registration="pixel"/"gridline")` 显式指定。
 
@@ -177,7 +192,12 @@
 - `FONT` 是总开关，`FONT_ANNOT_PRIMARY`/`FONT_LABEL`/`FONT_TITLE` 分项覆盖。
 - 来源：<https://forum.generic-mapping-tools.org/t/font-size-doesnt-change-regardless-of-what-i-do/3983>
 
-### 5.4 轴标签 `+l` 只在笛卡尔 (X) 投影上有效
+### 5.4 label 含空格时别再包引号 —— 引号会被原样画出来
+- **现象**：`frame='y+l"Depth (km)"'` 成图轴标签显示 **"Depth (km)"** 带引号。
+- **本质**：CLI 里引号给 shell 吃掉；PyGMT 字符串直达 GMT，多包的引号成了标签内容。
+- **正确**：`frame="y+lDepth (km)"` 直接写，空格无需转义（每个 frame 列表项独立成一个 -B 参数）。
+
+### 5.5 轴标签 `+l` 只在笛卡尔 (X) 投影上有效
 - 地理投影（M/L/G…）的 frame 不支持 `x+lLabel` 轴标题，要用 `fig.text` 自己加。
 
 ---
@@ -198,6 +218,8 @@ PyGMT 0.x 持续重命名参数，老博客/老脚本会报 `unexpected keyword`
 | grdclip `new=` | `replace=` | 0.15 |
 | `GMTInvalidInput` | `GMTValueError`/`GMTTypeError` | 0.17 |
 | `separator=` | `sep=` | 0.17 |
+| meca `compression_fill=`/`extension_fill=` | `compressionfill=`/`extensionfill=`（旧名硬报错 Unrecognized parameter） | 0.17 |
+| velo `uncertainty_fill=` | `uncertaintyfill=`（同上硬报错；但 `plot_longitude`/`event_name` 保留下划线） | 0.17 |
 | histogram `barwidth=` | `bar_width=` | 0.18 |
 | `margin=` | `clearance=` | 0.18 |
 
@@ -262,7 +284,12 @@ PyGMT 0.x 持续重命名参数，老博客/老脚本会报 `unexpected keyword`
 - **现象**：用 `rasterio` 手动 `transform` 写出的 tif 给 `grdimage`，常直接 segfault。
 - **解法**：别落地成手写 tif，直接用 xarray：在已知好坐标的 grid 上替换数据 `relief.copy(data=computed)`，传给 `grdimage`（保留正确 registration/坐标轴）。
 
-### 8.6 `grdimage(shading=...)` 要求强度网格与数据网格同维度
+### 8.6 `grdview` 用 `zscale` 输出画布失控（十万像素级高图）—— 用 `zsize` 定死
+- **现象**：`grdview(..., zscale="0.05c")` 对真实 DEM（z 跨几千米）出图高度爆到 ~125k px 或 psconvert 失败。
+- **本质**：`zscale` 是"每 z 单位多少厘米"，真实地形 z 范围大 → 画布无限拉高；教学例（z 范围几个单位）才适合 zscale。
+- **正确**：真实 DEM 一律 `zsize="3c"`（z 轴总高度定死）；另外小区域 3D 也要吃分辨率规则——`load_earth_relief("15s"/"03s", region=...)`，粗网格会把火山画成光滑馒头。
+
+### 8.7 `grdimage(shading=...)` 要求强度网格与数据网格同维度
 - **现象**：`grdimage [ERROR]: Dimensions of intensity grid do not match that of the data grid!`
 - **解法**：数据和地形梯度分辨率不同时，先 `pygmt.grdsample` 把两者采样到**同一 region + spacing + registration**，再画。
 
@@ -327,7 +354,12 @@ PyGMT 0.x 持续重命名参数，老博客/老脚本会报 `unexpected keyword`
 - `+h` 是 headshape（后掠程度，0=平底三角，1=纯 V 形燕尾）。`+h1` 时头几乎没有面积，填色被压没 → 又一次被误判成「`+g` 不生效」。
 - **安全值 `+h0.5`**，兼顾美观与可见性。
 
-### 9.4 安全写法
+### 9.4 地理投影上 velo 矢量的 `+n` 是双重陷阱 —— 直接别用
+- **坑 1（报错）**：`+n0.8c` 纸面单位在 M/地理投影上直接报 `Vector scale or length limit for geovectors must be given in units of d|m|s|e|f|k|M|n|u or q`（笛卡尔 `X/x` 上没事）。
+- **坑 2（更毒，静默）**：改成 `+n8q` 不报错，但 **所有箭头头被静默缩没**——q 实测比较的是矢量**纸面长度**（cm 量级），8"q" 远大于任何纸长 → 全部矢量触发 shrink，整幅图秃头线段（GMT 6.6 隔离复现：去掉 +n 头就回来）。
+- **正确**：velo 里**省略 `+n`**。短矢量掉头的守卫改由 **VSCALE 承担**：让最小关心速度 × VSCALE ≥ 箭头头长（如 0.25c 头 + 0.06 scale → ≥4.2 mm/yr 有头）；再小的速度本来也不该有视觉分量。
+
+### 9.5 安全写法
 ```python
 fig.plot(x=x, y=y, direction=[azimuth, length],
          style="v0.35c+e+gred+h0.5+n1c", pen="1.2p,red")

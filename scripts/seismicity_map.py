@@ -8,15 +8,27 @@ with your catalog / GCMT solutions.
 
 Usage:  python seismicity_map.py
 """
+import os
+import sys
+
 import numpy as np
 import pandas as pd
 import pygmt
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, os.path.expanduser("~/.claude/skills/pygmt-plotting/scripts"))  # fallback when this file is copied elsewhere
+from style_presets import coast_colors, colorbar, panel_label, style
+
 # ---------------- CONFIG ----------------
+STYLE = "house"                # house / journal / classic / minimal / presentation / dark
 REGION = [-118.5, -117.0, 35.0, 36.2]
 PROJECTION = "M12c"
 DEPTH_RANGE = [0, 15]          # km, for the CPT
 DEPTH_CMAP = "inferno"         # sequential; reversed below so shallow = bright
+SIZE_SCALE = 0.015             # circle size = SIZE_SCALE * 2**mag (cm). TUNE THIS:
+                               # dense catalog (>200 events in a tight region) or Mmax>4.5
+                               # saturates the map -> drop to ~0.008, add transparency=40,
+                               # thin the pen. Epicenters must stay individually resolvable.
 PANEL = "A"
 OUT = "seismicity_map.png"
 # ----------------------------------------
@@ -41,24 +53,24 @@ mechs = pd.DataFrame({
 })
 
 fig = pygmt.Figure()
-with pygmt.config(MAP_FRAME_TYPE="plain", MAP_FRAME_PEN="1p,black",
-                  FONT_ANNOT_PRIMARY="9p", FONT_LABEL="10p"):
+with style(STYLE):
     fig.basemap(region=REGION, projection=PROJECTION, frame=["WSne", "xaf", "yaf"])
-    fig.coast(land="gray92", water="white", shorelines="0.5p,black", resolution="f")
+    fig.coast(**coast_colors(STYLE), resolution="f")
 
     # epicenters: color = depth, size = magnitude
     pygmt.makecpt(cmap=DEPTH_CMAP, series=[DEPTH_RANGE[0], DEPTH_RANGE[1], 1], reverse=True)
     fig.plot(x=cat.lon, y=cat.lat, fill=cat.depth, cmap=True,
-             size=0.015 * 2 ** cat.mag, style="cc", pen="0.2p,black")
+             size=SIZE_SCALE * 2 ** cat.mag, style="cc", pen="0.2p,black")
 
     # focal mechanisms (colored by depth via the same CPT). When spec is a DataFrame the
     # longitude/latitude/depth columns are read from it — do NOT also pass them as kwargs.
+    # Beachballs must READ over the epicenter cloud: keep scale >= 2x the largest epicenter
+    # circle, or plot them at offset positions with tie-lines (GOTCHAS 8.10).
     if len(mechs):
         fig.meca(spec=mechs, scale="0.4c", convention="aki", cmap=True)
 
-    fig.text(position="TL", text=PANEL, font="12p,Helvetica-Bold,black", justify="TL",
-             offset="j0.2c", fill="white", pen="0.8p,black", clearance="1.5p/1.5p")
-    fig.colorbar(position="JBC+w8c/0.4c+h+o0c/0.9c", frame="x+lHypocenter depth (km)")
+    panel_label(fig, PANEL, style_name=STYLE)
+    colorbar(fig, "Hypocenter depth (km)", style_name=STYLE, width=8)
 
 fig.savefig(OUT, dpi=300, crop=True)
 print(f"wrote {OUT}")

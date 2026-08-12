@@ -3,9 +3,12 @@
 An [Agent Skill](https://agentskills.io/specification) for producing publication-quality
 scientific maps and figures with [PyGMT](https://www.pygmt.org/).
 
-It bundles three things that are usually scattered: a condensed API reference, an
-opinionated house style for journal figures, and — the part that took the longest to
-accumulate — a catalogue of field-tested traps that the official docs do not mention.
+It bundles what is usually scattered: six runnable figure templates, six switchable
+visual styles, a condensed API reference, an opinionated house style for journal figures,
+a mandatory pre-delivery QC loop, and — the part that took the longest to accumulate —
+a catalogue of field-tested traps that the official docs do not mention. The current
+version was hardened by ten rounds of blind agent testing: every checklist item and
+gotcha corresponds to a failure that actually happened.
 
 ## Install
 
@@ -58,9 +61,13 @@ into the skills directory for your runtime.
 | `GOTCHAS.md` | Nine sections of pitfalls with symptom → cause → fix, sourced from the GMT forum, PyGMT issues, and hard-won practice. |
 | `CRAFT.md` | Publication craft: layer order, colormap choice, hillshade conventions, multi-panel alignment, vector vs raster export. |
 | `GALLERY.md` | 13 ready-to-adapt scenario templates. |
-| `scripts/` | Four runnable, parameterized templates. Each runs standalone on synthetic or GMT-hosted data — edit the `CONFIG` block at the top. |
+| `STYLES.md` | Six selectable visual styles (`house` / `journal` / `classic` / `minimal` / `presentation` / `dark`) with previews and per-style guidance. |
+| `QC.md` | The mandatory pre-delivery QC loop: overlap / clipping / missing-element / spurious-ink / layout checklists plus data-anchor checks, with a token-economy protocol. |
+| `COMMUNITY.md` | Curated navigation of the GMT China community manual (docs.gmt-china.org): high-value gallery examples, the complete CJK-label recipe, dataset pointers. |
+| `MANUAL.html` | A self-contained user handbook (Chinese, GMT-manual style) covering all of the above. |
+| `scripts/` | Six runnable, parameterized templates plus `style_presets.py` (the style engine). Each runs standalone on synthetic or GMT-hosted data — edit the `CONFIG` block at the top, switch looks with one `STYLE = "..."` line. |
 
-All four scripts are verified to run against PyGMT 0.17.0 / GMT 6.6.0. They produce the
+All six scripts are verified to run against PyGMT 0.17.0 / GMT 6.6.0. They produce the
 figures below directly, with no data files to fetch:
 
 | `displacement_map.py` | `seismicity_map.py` |
@@ -72,6 +79,24 @@ figures below directly, with no data files to fetch:
 |---|---|
 | ![](previews/cross_section.png) | ![](previews/multipanel_components.png) |
 | A profile line on a map plus events projected onto a depth section, depth reading positive downward. | Three-component panel row sharing one CPT, laid out with `subplot`. |
+
+| `velocity_field_map.py` | `wrapped_phase_map.py` |
+|---|---|
+| ![](previews/velocity_field_map.png) | ![](previews/wrapped_phase_map.png) |
+| GPS velocities with 1-sigma error ellipses, a labeled reference vector, and a map scale — using the `velo` syntax that keeps arrowheads alive. | A wrapped interferogram rendered without wrap-seam artifacts: cyclic CPT, nearest-neighbor interpolation, and a moire guard on raster sizing. |
+
+## Styles
+
+One dataset, six looks — set `STYLE = "..."` in any template's CONFIG block:
+
+| | | |
+|---|---|---|
+| ![](previews/style_house.png) `house` — default | ![](previews/style_journal.png) `journal` — submission | ![](previews/style_classic.png) `classic` — fancy frame |
+| ![](previews/style_minimal.png) `minimal` — light grid | ![](previews/style_presentation.png) `presentation` — slides | ![](previews/style_dark.png) `dark` — dark decks |
+
+Every style keeps the same hard rules (W/S-only annotations, bottom colorbar with units,
+positive-down depth axes); `style_presets.py` also exposes `style()`, `panel_label()`,
+`colorbar()` and `coast_colors()` for standalone scripts.
 
 ## A sample of the gotchas
 
@@ -86,6 +111,12 @@ These are the kind of failures that cost an afternoon because nothing errors out
   silently overwrites, so multi-panel figures get cross-contaminated colors.
 - **xarray arithmetic resets `gmt.gtype`/`gmt.registration`,** so `grid * 2` quietly turns
   a geographic grid into a Cartesian one and your map shifts. Slicing preserves them.
+- **`frame=["WSne", "af", "+tTitle"]` hard-fails on GMT 6.6.** Frame settings may appear
+  in only one list entry now — write `["WSne+tTitle", "af"]`. Half the older tutorials
+  teach the failing form.
+- **`velo` with `+n` silently deletes every arrowhead.** Paper units error out on
+  geographic maps, and `+n8q` "works" while shrinking all heads to nothing. Omit `+n`
+  and size `VSCALE` so your smallest meaningful velocity clears the head length.
 - **Bilinear interpolation destroys cyclic colormaps.** Adjacent +π and −π pixels average
   to 0, which is the neutral color, so wrapped interferograms grow a false gray seam along
   every fringe boundary. Use `interpolation="n"`.

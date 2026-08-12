@@ -103,7 +103,7 @@ df = pd.DataFrame({
     "SITE": ["0x0", "3x3", "4x6", "6x4", "-6x4", "6x-4"]})
 fig = pygmt.Figure()
 fig.velo(data=df, region=[-10, 8, -10, 6], projection="x0.8c", frame=["WSne", "2g2f"],
-         spec="e0.2/0.39+f18", uncertainty_fill="lightblue1", pen="0.6p,red",
+         spec="e0.2/0.39+f18", uncertaintyfill="lightblue1", pen="0.6p,red",
          line=True, vector="0.3c+p1p+e+gred")
 fig.show()
 ```
@@ -121,6 +121,9 @@ fig.show()
 
 ## 9. Rose diagram (fig.rose)
 Directional data statistics (fault strikes, joint azimuths, wave directions).
+**Use fig.rose, not matplotlib polar**: rose is azimuth-native (0° = North, clockwise);
+matplotlib polar defaults to counterclockwise-from-East, and hand-relabeled compasses
+routinely come out MIRRORED (E/W swapped) — a silently wrong structural figure.
 ```python
 import pygmt
 data = pygmt.datasets.load_sample_data(name="fractures")  # length + azimuth
@@ -132,6 +135,8 @@ fig.show()
 
 ## 10. 3D perspective surface (fig.grdview)
 Three-dimensional rendering of a grid (topography, potential field, inversion result).
+**Real DEMs**: use `zsize="3c"` NOT `zscale` (zscale × thousands of meters = runaway canvas,
+GOTCHAS 8.6), and `load_earth_relief("15s"/"03s", region=...)` so the volcano keeps its ridges.
 ```python
 import numpy as np, pygmt, xarray as xr
 def ackley(x, y):
@@ -198,5 +203,5 @@ fig.show()
 ---
 
 **Focal mechanisms (meca)** are covered in `scripts/seismicity_map.py` and REFERENCE.md §8.
-**Version note**: newer gallery code may use `from pygmt.params import Box, Position`; on older
-PyGMT replace with string modifiers (`position="jTL+o0.2c"`, `box="+p1p,black"`).
+**Version note**: newer gallery code may use `from pygmt.params import Box, Pattern` (the only two
+classes in v0.17); string modifiers (`position="jTL+o0.2c"`, `box="+p1p,black"`) work on all versions.
