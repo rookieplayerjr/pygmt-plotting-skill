@@ -21,11 +21,11 @@ from style_presets import coast_colors, colorbar, panel_label, style
 
 # ---------------- CONFIG ----------------
 STYLE = "house"                # house / journal / classic / minimal / presentation / dark
-REGION = [131, 152, 33, 47]
+REGION = [138, 147, 35, 42.5]
 PROJECTION = "M12c"
-DEPTH_RANGE = [0, 500]         # km, for the CPT
+DEPTH_RANGE = [0, 250]         # km, for the CPT
 DEPTH_CMAP = "inferno"         # sequential; reversed below so shallow = bright
-SIZE_SCALE = 0.004             # circle size = SIZE_SCALE * 2**mag (cm). TUNE THIS:
+SIZE_SCALE = 0.0025             # circle size = SIZE_SCALE * 2**mag (cm). TUNE THIS:
                                # dense catalog (>200 events in a tight region) or Mmax>4.5
                                # saturates the map -> drop it, add transparency=40,
                                # thin the pen. Epicenters must stay individually resolvable.
@@ -33,13 +33,10 @@ PANEL = "A"
 OUT = "seismicity_map.png"
 # ----------------------------------------
 
-# Demo catalog: REAL Japan-trench seismicity (PyGMT built-in sample, USGS-derived).
-# Replace with your own catalog (lon, lat, depth, mag), e.g. from USGS/SCEC.
-jq = pygmt.datasets.load_sample_data(name="japan_quakes")
-cat = pd.DataFrame({
-    "lon": jq.longitude, "lat": jq.latitude,
-    "depth": jq.depth_km, "mag": jq.magnitude,
-})
+# Demo catalog: REAL Japan-trench seismicity — USGS M>=4.5, 2000-2025 (public domain,
+# bundled as scripts/data/japan_trench_usgs.csv). Replace with your own catalog.
+cat = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "data", "japan_trench_usgs.csv"))
 
 # Demo focal mechanisms (Aki convention): interplate-thrust style at the two largest
 # events, for illustration. Replace with GCMT solutions or set to [] to skip.
@@ -59,7 +56,7 @@ with style(STYLE):
     # epicenters: color = depth, size = magnitude
     pygmt.makecpt(cmap=DEPTH_CMAP, series=[DEPTH_RANGE[0], DEPTH_RANGE[1], 1], reverse=True)
     fig.plot(x=cat.lon, y=cat.lat, fill=cat.depth, cmap=True,
-             size=SIZE_SCALE * 2 ** cat.mag, style="cc", pen="0.2p,black")
+             size=SIZE_SCALE * 2 ** cat.mag, style="cc", pen="0.15p,black", transparency=30)
 
     # focal mechanisms (colored by depth via the same CPT). When spec is a DataFrame the
     # longitude/latitude/depth columns are read from it — do NOT also pass them as kwargs.

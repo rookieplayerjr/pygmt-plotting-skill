@@ -3,7 +3,8 @@
 and earthquakes projected onto a depth section (bottom).
 
 Demonstrates pygmt.project (generate line + project points) and pygmt.grdtrack (sample DEM).
-Runs standalone with synthetic earthquakes; replace `eqs` (lon, lat, depth, mag) with yours.
+Runs standalone on the REAL built-in Japan-trench catalog (the section shows the dipping
+Wadati-Benioff zone); replace `eqs` (lon, lat, depth, mag) with your own catalog.
 
 Usage:  python cross_section.py
 """
@@ -20,35 +21,26 @@ from style_presets import colorbar, panel_label, style
 
 # ---------------- CONFIG ----------------
 STYLE = "house"         # house / journal / classic / minimal / presentation / dark
-REGION = [-118.5, -117.0, 35.0, 36.2]
+REGION = [138.0, 147.0, 35.0, 42.5]
 PROJECTION = "M12c"
-A = [-118.3, 35.2]      # profile start [lon, lat] — place A-B THROUGH the target feature
-B = [-117.2, 36.0]      # profile end; sanity-check: profile peak must match the feature's
-                        # known elevation/depth (a summit missed by a few km reads ~2000 m low).
+RELIEF_RES = "01m"      # earth_relief resolution (small regions: 15s/03s)
+A = [139.2, 38.2]       # profile start [lon, lat] — place A-B THROUGH the target feature
+B = [146.0, 39.8]       # profile end; sanity-check: profile peak/depth must match the
+                        # feature's known values (a summit missed by a few km reads low).
                         # For a fault-PERPENDICULAR section: A-B must cross the seismicity
-                        # trend at ~90 deg through its DENSEST part (NE-trending zone ->
-                        # NW-SE line), not skim an edge.
-SWATH_KM = 15.0         # keep events within +/- this perpendicular distance
-DEPTH_MAX = 15.0        # km, section depth axis
+                        # trend at ~90 deg through its DENSEST part, not skim an edge.
+SWATH_KM = 100.0        # keep events within +/- this perpendicular distance
+DEPTH_MAX = 250.0       # km, section depth axis
 OUT = "cross_section.png"
 # ----------------------------------------
 
-# Demo: an aftershock cloud on a NE-dipping structure along the A-B azimuth — depth
-# increases across strike so the section shows a coherent dip, like a real sequence.
-rng = np.random.default_rng(2)
-N = 220
-along = rng.uniform(0, 1, N)                      # position along the zone
-across = rng.normal(0, 0.045, N)                  # scatter across the zone
-zone_az = np.arctan2(0.8, 1.1)                    # A->B direction
-eqs = pd.DataFrame({
-    "lon": -118.3 + along * 1.1 + across * np.sin(zone_az),
-    "lat": 35.2 + along * 0.8 - across * np.cos(zone_az),
-    # deepens toward B along the zone -> the A-B section shows a coherent dipping band
-    "depth": np.clip(2.5 + 9.5 * along + rng.normal(0, 1.0, N), 1, 14.5),
-    "mag": rng.gamma(2.0, 0.55, N) + 1.0,         # Gutenberg-Richter-ish, M1-4.5
-})
+# Demo: REAL Japan-trench seismicity — USGS catalog M>=4.5, 2000-2025 (public domain,
+# bundled as scripts/data/japan_trench_usgs.csv). The section across the trench shows
+# the westward-deepening Wadati-Benioff zone directly.
+eqs = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "data", "japan_trench_usgs.csv"))
 
-relief = pygmt.datasets.load_earth_relief(resolution="15s", region=REGION)
+relief = pygmt.datasets.load_earth_relief(resolution=RELIEF_RES, region=REGION)
 
 fig = pygmt.Figure()
 with style(STYLE):
@@ -78,7 +70,7 @@ with style(STYLE):
     fig.basemap(region=[0, seclen, 0, DEPTH_MAX], projection="X12c/-4c",
                 frame=["WSne", "xaf+lDistance (km)", "yaf+lDepth (km)"])
     fig.plot(x=proj.p, y=proj.depth, fill=proj.depth, cmap=True,
-             size=0.015 * 2 ** proj.mag, style="cc", pen="0.2p,black")
+             size=0.0025 * 2 ** proj.mag, style="cc", pen="0.15p,black", transparency=25)
     fig.text(x=[0, seclen], y=[0, 0], text=["A", "B"], no_clip=True,
              offset="0c/0.25c", font="11p,Helvetica-Bold,red")
     # offset=1.5: the section's "Distance (km)" x-label stacks below the axis — the

@@ -19,7 +19,8 @@ nearest-neighbor guard, GEM fault traces, 2016 Mw 7.0 (white) and 2026 (yellow) 
 - **Eight runnable templates.** Displacement map, seismicity map with focal mechanisms,
   map + depth section, E/N/U component panels, GPS velocity field, wrapped interferogram,
   3D finite-fault slip fence, station-centered teleseismic geometry. Each runs standalone
-  in seconds; you edit only the CONFIG block and the data section.
+  in seconds (two on a bundled real USGS catalog); you edit only the CONFIG block and the
+  data section.
 - **Six styles, one switch.** `house` · `journal` · `classic` · `minimal` ·
   `presentation` · `dark` — `STYLE = "dark"` restyles the entire figure.
 - **Condensed reference + symptom-indexed gotchas.** The failures that cost an afternoon
@@ -46,18 +47,20 @@ is useful without them.
 
 ## Templates
 
-Every image below is the direct, unedited output of its script:
+Eight runnable templates; every figure below is real data — the bundled USGS
+Japan-trench catalog (public domain, `scripts/data/japan_trench_usgs.csv`) or
+Sentinel-1/GEONET products of the 2026 Mj 7.1 Kumamoto earthquake:
 
 | | |
 |---|---|
 | <img src="previews/seismicity_map.png" width="420"> | <img src="previews/cross_section.png" width="420"> |
-| `seismicity_map.py` — Japan-trench catalog (real PyGMT sample data), depth-colored, magnitude-sized, GCMT-style beachballs | `cross_section.py` — profile on relief + events projected onto a depth section, depth reading positive down |
-| <img src="previews/multipanel_components.png" width="420"> | <img src="previews/velocity_field_map.png" width="420"> |
-| `multipanel_components.py` — E/N/U decomposition sharing one CPT and colorbar | `velocity_field_map.py` — GPS vectors, 1σ ellipses, reference arrow, scale bar |
-| <img src="previews/wrapped_phase_map.png" width="420"> | <img src="previews/displacement_map.png" width="420"> |
-| `wrapped_phase_map.py` — wrapped fringes with cyclic CPT + nearest-neighbor guard, π-annotated colorbar | `displacement_map.py` — gridded LOS over terrain, fault trace, locator inset |
-| <img src="previews/fault_slip_3d.png" width="420"> | <img src="previews/station_azimuthal_map.png" width="420"> |
-| `fault_slip_3d.py` — 3D finite-fault slip fence via `plot3d` polygons, depth reading positive down | `station_azimuthal_map.py` — azimuthal-equidistant teleseismic geometry with epicentral-distance rings |
+| `seismicity_map.py` — USGS Tohoku catalog (7 708 events, M ≥ 4.5), depth-colored, magnitude-sized; the 2011 Mw 9.1 thrust mechanism stands out at scale | `cross_section.py` — the same catalog projected on a trench-perpendicular section: the Wadati-Benioff zone dips west off the profile, depth reading positive down |
+| <img src="previews/kumamoto_gnss.png" width="420"> | <img src="previews/station_azimuthal_map.png" width="420"> |
+| `velocity_field_map.py` conventions on real GEONET coseismic offsets of the 2026 Kumamoto earthquake (87 cm peak, arrows ≥ 2 cm, all stations dotted) | `station_azimuthal_map.py` — azimuthal-equidistant teleseismic geometry with epicentral-distance rings; the six labeled epicenters are real events |
+
+Templates without a figure here (`displacement_map.py`, `multipanel_components.py`,
+`wrapped_phase_map.py`, `fault_slip_3d.py`) run standalone on synthetic demo fields —
+their real-data counterparts are the Kumamoto figures on this page.
 
 ## Real-data example
 
@@ -73,7 +76,8 @@ is the right-lateral rupture reading directly off the figure.
 
 <p align="center"><img src="previews/styles_all.png" width="860"></p>
 
-Same data, six looks — set `STYLE = "..."` in any template. All styles keep the same hard
+Same data — the real Kumamoto pixel-offset displacement field — six looks; set
+`STYLE = "..."` in any template. All styles keep the same hard
 rules (annotations on W/S only, bottom colorbar with units, depth axes positive-down).
 `style_presets.py` also exposes `style()`, `panel_label()`, `colorbar()`, `coast_colors()`
 for standalone scripts.
