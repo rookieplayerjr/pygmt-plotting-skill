@@ -80,7 +80,8 @@ with style(STYLE):
             ("03s" if span <= 1 else "15s" if span <= 3 else "01m")
         relief = pygmt.datasets.load_earth_relief(resolution=res, region=REGION)
         shade = pygmt.grdgradient(grid=relief, azimuth=315, normalize="t1")
-        pygmt.makecpt(cmap="gray", series=[-9000, 3000])   # land in the light grays
+        zlo, zhi = float(relief.min()), float(relief.max())
+        pygmt.makecpt(cmap="gray", series=[zlo * 1.25 if zlo < 0 else zlo - 800, zhi + 1800])
         fig.grdimage(grid=relief, shading=shade, cmap=True)
         fig.coast(shorelines="0.4p,gray30", water="lightsteelblue@30", resolution="i")
     else:

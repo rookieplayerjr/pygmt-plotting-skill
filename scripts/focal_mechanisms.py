@@ -15,7 +15,7 @@ import pygmt
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(1, os.path.expanduser("~/.claude/skills/pygmt-plotting/scripts"))  # fallback when this file is copied elsewhere
-from style_presets import coast_colors, colorbar, panel_label, style
+from style_presets import colorbar, panel_label, style
 
 # ---------------- CONFIG ----------------
 STYLE = "house"
@@ -43,7 +43,16 @@ mechs = pd.DataFrame([
 fig = pygmt.Figure()
 with style(STYLE):
     fig.basemap(region=REGION, projection=PROJECTION, frame=["WSne", "xaf", "yaf"])
-    fig.coast(**coast_colors(STYLE), resolution="i")
+    # shaded-relief context by default (tectonic maps read empty without it)
+    span = max(REGION[1] - REGION[0], REGION[3] - REGION[2])
+    res = "03s" if span <= 1 else "15s" if span <= 3 else "01m"
+    relief = pygmt.datasets.load_earth_relief(resolution=res, region=REGION)
+    shade = pygmt.grdgradient(grid=relief, azimuth=315, normalize="t1")
+    zlo, zhi = float(relief.min()), float(relief.max())
+    pygmt.makecpt(cmap="gray", series=[zlo * 1.25 if zlo < 0 else zlo - 800, zhi + 1800])
+    fig.grdimage(grid=relief, shading=shade, cmap=True)
+    fig.coast(shorelines="0.4p,gray30", water="lightsteelblue@30",
+              lakes="lightsteelblue", resolution="i")
     pygmt.makecpt(cmap="inferno", series=DEPTH_RANGE, reverse=True)
     # manual Mw sizing: radius = 0.18 + 0.13*(Mw-6) cm reads clearly from M6.6 to M9.1
     for _, e in mechs.iterrows():
