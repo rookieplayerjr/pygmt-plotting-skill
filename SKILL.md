@@ -36,6 +36,24 @@ All scientific figures MUST follow these format rules:
 - **No double frames**: subplot handles frame → do NOT call basemap(frame=) inside panels.
 - **Self-check**: After generating each figure, read/inspect it. Fix double frames, clipped content, inconsistent labels before showing to user.
 
+## Step 0 — Auto-expand the request into a brief (before routing)
+
+User prompts arrive terse ("画一下玛多的地震分布"). BEFORE routing, expand the request
+into the five-slot brief below, filling every missing slot from the defaults column —
+then STATE the completed brief back in 3-5 lines before plotting, so the user can
+course-correct cheaply. Never skip this; never ask about a slot the defaults can fill.
+
+| Slot | If the prompt doesn't say, fill with |
+|---|---|
+| 图型 + 模板 | route via the template table below |
+| 区域 / 事件参数 | resolve named events/places to coordinates (USGS FDSN query, known catalogs, or geocode); region = source dimension padded ~0.5-1° |
+| 数据来源 + 回退 | real data first: user's files > live USGS/EarthScope fetch > bundled data/; synthetic ONLY as a fallback and the brief must SAY it is synthetic |
+| 风格 | scene words → style routing below (slides→presentation, 黑底→dark, 投稿→journal, 海报/经典→classic, 网页→minimal); else house |
+| QC 验收点 + 输出 | attach the figure type's trap notes from the routing table (cyclic+nearest for fringes, no +n for velo, zsize for 3D, positive-down depth...) + `<name>.png` at 300 dpi (400 for fringe rasters) |
+
+Ask the user ONLY for a slot that is genuinely undecidable (e.g. which of two同名 events);
+one question max, then proceed.
+
 ## Template routing — check BEFORE writing any code
 
 If the task matches a row below, the workflow is MECHANICAL — do these three steps literally:
@@ -170,6 +188,7 @@ style, extend the `STYLES` dict in `scripts/style_presets.py` and re-run
 
 ## Workflow for a new figure
 
+0. Expand the request into the five-slot brief (Step 0 above) and state it back.
 1. Decide region, projection, and CPT from the cheat sheet above; pick a style
    (default `house`; slides → `presentation`/`dark`; submission → `journal`).
 2. Pick the closest template in [GALLERY.md](GALLERY.md) or `scripts/` and adapt it.
