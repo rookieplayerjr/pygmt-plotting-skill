@@ -71,3 +71,6 @@ with style(STYLE):
 
 fig.savefig(OUT, dpi=DPI, crop=True)
 print(f"wrote {OUT} ({WIDTH_CM}cm @ {DPI}dpi, {ncols} cols)")
+from qc_check import qc_image
+qc_image(OUT)   # hard QC gate — a broken render aborts here instead of shipping
+

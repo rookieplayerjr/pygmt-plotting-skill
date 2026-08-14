@@ -77,3 +77,6 @@ with style(STYLE, FONT_TAG=STYLES[STYLE]["label_font"]):
 
 fig.savefig(OUT, dpi=300, crop=True)
 print(f"wrote {OUT}")
+from qc_check import qc_image
+qc_image(OUT)   # hard QC gate — a broken render aborts here instead of shipping
+
