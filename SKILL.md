@@ -46,7 +46,7 @@ course-correct cheaply. Never skip this; never ask about a slot the defaults can
 | Slot | If the prompt doesn't say, fill with |
 |---|---|
 | 图型 + 模板 | route via the template table below |
-| 区域 / 事件参数 | resolve named events/places to coordinates (USGS FDSN query, known catalogs, or geocode); region = source dimension padded ~0.5-1° |
+| 区域 / 事件参数 | resolve named events/places to coordinates (USGS FDSN query, known catalogs, or geocode); region = source dimension padded ~0.5-1°; then ASSERT numerically that the coordinates sit inside the region: `qc_check.assert_in_region(lon, lat, REGION, "event")` — a shipped failure framed the map half a degree off the epicenter |
 | 数据来源 + 回退 | real data first: user's files > live USGS/EarthScope fetch > bundled data/; synthetic ONLY as a fallback and the brief must SAY it is synthetic |
 | 风格 | scene words → style routing below (slides→presentation, 黑底→dark, 投稿→journal, 海报/经典→classic, 网页→minimal); else house |
 | QC 验收点 + 输出 | attach the figure type's trap notes from the routing table (cyclic+nearest for fringes, no +n for velo, zsize for 3D, positive-down depth...) + `<name>.png` at 300 dpi (400 for fringe rasters) |

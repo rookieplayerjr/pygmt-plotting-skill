@@ -78,6 +78,18 @@ def qc_image(path, strict=True):
     return m
 
 
+def assert_in_region(lon, lat, region, name="target", margin=0.05):
+    """The resolved event/place MUST sit inside the map region (with margin as a
+    fraction of the span). A real shipped failure framed the 2025 Dingri map
+    half a degree south of the epicenter."""
+    w, e, sth, nth = region[:4]
+    mx, my = (e - w) * margin, (nth - sth) * margin
+    if not (w + mx <= lon <= e - mx and sth + my <= lat <= nth - my):
+        raise SystemExit(f"[QC-FAIL] {name} ({lon:.3f}, {lat:.3f}) is outside or on "
+                         f"the edge of region {region[:4]} — re-center the region on "
+                         "the resolved coordinates before rendering.")
+
+
 def assert_real_field(arr, name="field"):
     """Grid sanity before plotting: enough finite data, non-constant."""
     a = np.asarray(arr, dtype=float)
