@@ -72,7 +72,7 @@ in ~5 s with synthetic demo data shaped like the real use case:
 |---|---|
 | Scalar displacement/velocity map (InSAR LOS, uplift, subsidence) | `scripts/displacement_map.py` |
 | Earthquake catalog / seismicity map (± beachballs) | `scripts/seismicity_map.py` |
-| Map + profile / depth section (topo or hypocenters) | `scripts/cross_section.py` |
+| Map + profile / depth section | `scripts/cross_section.py` — `SECTION="topo"` for elevation profiles (needs NO catalog; never invent events), `"events"` for hypocenter sections; aspect guard caps tall regions |
 | Multi-panel component grids (E/N/U, data-model-residual) | `scripts/multipanel_components.py` |
 | GPS/GNSS vectors + error ellipses | `scripts/velocity_field_map.py` (velo arrows fail **silently** — GOTCHAS §9) |
 | Wrapped interferogram / fringes | `scripts/wrapped_phase_map.py` (cyclic CPT + `interpolation="n"` + moiré guard) |

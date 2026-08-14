@@ -22,7 +22,9 @@ from style_presets import colorbar, panel_label, style
 # ---------------- CONFIG ----------------
 STYLE = "house"         # house / journal / classic / minimal / presentation / dark
 REGION = [138.0, 147.0, 35.0, 42.5]
-PROJECTION = "M12c"
+SECTION = "events"      # "events" = hypocenter depth section (positive-down);
+                        # "topo"   = elevation profile along A-B (no catalog needed —
+                        # NEVER invent events to feed this template)
 RELIEF_RES = "01m"      # earth_relief resolution (small regions: 15s/03s)
 A = [139.2, 38.2]       # profile start [lon, lat] — place A-B THROUGH the target feature
 B = [146.0, 39.8]       # profile end; sanity-check: profile peak/depth must match the
@@ -37,10 +39,20 @@ OUT = "cross_section.png"
 # Demo: REAL Japan-trench seismicity — USGS catalog M>=4.5, 2000-2025 (public domain,
 # bundled as scripts/data/japan_trench_usgs.csv). The section across the trench shows
 # the westward-deepening Wadati-Benioff zone directly.
-eqs = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "data", "japan_trench_usgs.csv"))
+eqs = None
+if SECTION == "events":
+    eqs = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "data", "japan_trench_usgs.csv"))
 
 relief = pygmt.datasets.load_earth_relief(resolution=RELIEF_RES, region=REGION)
+
+# ASPECT GUARD: a fixed 12 cm width explodes into a 1:5 strip for tall regions
+# (a real shipped failure). Cap the rendered map height at ~15 cm.
+import math
+aspect = (REGION[3] - REGION[2]) / max(1e-6, (REGION[1] - REGION[0])
+         * math.cos(math.radians((REGION[2] + REGION[3]) / 2)))
+W_CM = round(min(12.0, 15.0 / max(aspect, 0.05)), 1)
+PROJECTION = f"M{W_CM}c"
 
 fig = pygmt.Figure()
 with style(STYLE):
@@ -54,28 +66,40 @@ with style(STYLE):
              offset="0c/0.3c", font="12p,Helvetica-Bold,red")
     panel_label(fig, "A", style_name=STYLE)
 
-    # project earthquakes onto the section: p = along-track km, z = depth, keep |q| < SWATH
-    proj = pygmt.project(data=eqs[["lon", "lat", "depth", "mag"]], center=A, endpoint=B,
-                         convention="pz", unit=True, width=[-SWATH_KM, SWATH_KM])
-    proj.columns = ["p", "depth", "mag"]
     # generate="1k" walks the line in 1 km steps; column p is along-track distance,
     # so its last value IS the section length.
-    seclen = float(pygmt.project(center=A, endpoint=B, generate="1k",
-                                 unit=True).p.iloc[-1])
+    track = pygmt.project(center=A, endpoint=B, generate="1k", unit=True)
+    seclen = float(track.p.iloc[-1])
 
-    # ---- top: depth section (negative height -> depth increases downward) ----
     fig.shift_origin(yshift="h+3.4c")   # gap must hold: section x-annots + x-label +
                                         # colorbar (offset 1.5c + bar + its annots/label)
-    pygmt.makecpt(cmap="inferno", series=[0, DEPTH_MAX, 1], reverse=True)
-    fig.basemap(region=[0, seclen, 0, DEPTH_MAX], projection="X12c/-4c",
-                frame=["WSne", "xaf+lDistance (km)", "yaf+lDepth (km)"])
-    fig.plot(x=proj.p, y=proj.depth, fill=proj.depth, cmap=True,
-             size=0.0025 * 2 ** proj.mag, style="cc", pen="0.15p,black", transparency=25)
-    fig.text(x=[0, seclen], y=[0, 0], text=["A", "B"], no_clip=True,
-             offset="0c/0.25c", font="11p,Helvetica-Bold,red")
-    # offset=1.5: the section's "Distance (km)" x-label stacks below the axis — the
-    # style default (0.8c) overprints it
-    colorbar(fig, "Depth (km)", style_name=STYLE, width=7, offset=1.5)
+    if SECTION == "events":
+        # hypocenters projected onto the section (depth POSITIVE-DOWN, house rule)
+        proj = pygmt.project(data=eqs[["lon", "lat", "depth", "mag"]], center=A,
+                             endpoint=B, convention="pz", unit=True,
+                             width=[-SWATH_KM, SWATH_KM])
+        proj.columns = ["p", "depth", "mag"]
+        pygmt.makecpt(cmap="inferno", series=[0, DEPTH_MAX, 1], reverse=True)
+        fig.basemap(region=[0, seclen, 0, DEPTH_MAX], projection=f"X{W_CM}c/-4c",
+                    frame=["WSne", "xaf+lDistance (km)", "yaf+lDepth (km)"])
+        fig.plot(x=proj.p, y=proj.depth, fill=proj.depth, cmap=True,
+                 size=0.0025 * 2 ** proj.mag, style="cc", pen="0.15p,black",
+                 transparency=25)
+        fig.text(x=[0, seclen], y=[0, 0], text=["A", "B"], no_clip=True,
+                 offset="0c/0.25c", font="11p,Helvetica-Bold,red")
+        # offset=1.5: the section x-label stacks below the axis — the style default
+        # (0.8c) overprints it
+        colorbar(fig, "Depth (km)", style_name=STYLE, width=7, offset=1.5)
+    else:
+        # ELEVATION profile along A-B (y-up; the positive-down rule is for depth)
+        elev = pygmt.grdtrack(grid=relief, points=track, newcolname="z")
+        zmin = min(0.0, float(elev.z.min()) * 1.1)
+        zmax = float(elev.z.max()) * 1.12
+        fig.basemap(region=[0, seclen, zmin, zmax], projection=f"X{W_CM}c/4c",
+                    frame=["WSne", "xaf+lDistance (km)", "yaf+lElevation (m)"])
+        fig.plot(x=elev.p, y=elev.z, fill="gray75", close=f"+y{zmin}", pen="1p,gray20")
+        fig.text(x=[0, seclen], y=[zmax, zmax], text=["A", "B"], no_clip=True,
+                 offset="0c/0.25c", font="11p,Helvetica-Bold,red")
 
 fig.savefig(OUT, dpi=300, crop=True)
 print(f"wrote {OUT}")
