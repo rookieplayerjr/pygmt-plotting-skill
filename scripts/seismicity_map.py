@@ -36,14 +36,24 @@ MAG_CLASSES = None             # stats-panel bins; None = auto from catalog magn
 STATS_INSET = True             # magnitude-class count panel, auto-placed in the EMPTIEST
                                # corner so it never covers the seismicity (QC hard rule)
 SCALE_BAR = True               # map scale, bottom-right (moves to BL if stats live at BR)
+CATALOG = "bundled"            # "bundled" or dict for data_fetch.usgs_catalog (live fetch)
+EVENT = None                   # (lon, lat) of the named mainshock: asserted inside
+                               # REGION and starred
 PANEL = "A"
 OUT = "seismicity_map.png"
 # ----------------------------------------
 
 # Demo catalog: REAL Japan-trench seismicity — USGS M>=4.5, 2000-2025 (public domain,
 # bundled as scripts/data/japan_trench_usgs.csv). Replace with your own catalog.
-cat = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "data", "japan_trench_usgs.csv"))
+if CATALOG == "bundled":
+    cat = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "data", "japan_trench_usgs.csv"))
+else:
+    from data_fetch import usgs_catalog
+    cat = usgs_catalog(REGION, **CATALOG)
+if EVENT is not None:
+    from qc_check import assert_in_region
+    assert_in_region(EVENT[0], EVENT[1], REGION, "mainshock")
 
 # Focal mechanisms for the two largest events, GCMT-approximate values
 # (2011 Tohoku Mw9.1: 203/10/88; 2003 Tokachi-oki Mw8.3: 230/20/109).
@@ -130,6 +140,9 @@ with style(STYLE):
         fig.basemap(map_scale=f"{corner}+w{km}k+f+u+o0.6c/0.6c"
                               f"+c{np.mean(REGION[2:]):.0f}")
 
+    if EVENT is not None:
+        fig.plot(x=[EVENT[0]], y=[EVENT[1]], style="a0.6c", fill="yellow",
+                 pen="1p,black")
     panel_label(fig, PANEL, style_name=STYLE)
     colorbar(fig, "Hypocenter depth (km)", style_name=STYLE, width=8)
 

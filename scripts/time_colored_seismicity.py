@@ -22,11 +22,20 @@ STYLE = "house"
 REGION = [138, 147, 35, 42.5]
 TSPAN = [2011.0, 2012.0]       # decimal years: the Tohoku year
 SIZE_SCALE = 0.0035
+CATALOG = "bundled"            # "bundled" or dict for data_fetch.usgs_catalog
+EVENT = None                   # (lon, lat): asserted inside REGION, starred
 OUT = "time_colored_seismicity.png"
 # ----------------------------------------
 
-cat = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "data", "japan_trench_usgs.csv"), parse_dates=["time"])
+if CATALOG == "bundled":
+    cat = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "data", "japan_trench_usgs.csv"), parse_dates=["time"])
+else:
+    from data_fetch import usgs_catalog
+    cat = usgs_catalog(REGION, **CATALOG)
+if EVENT is not None:
+    from qc_check import assert_in_region
+    assert_in_region(EVENT[0], EVENT[1], REGION, "mainshock")
 cat["dyear"] = cat.time.dt.year + cat.time.dt.dayofyear / 365.25
 cat = cat[(cat.dyear >= TSPAN[0]) & (cat.dyear <= TSPAN[1])]
 print(f"{len(cat)} events in window")

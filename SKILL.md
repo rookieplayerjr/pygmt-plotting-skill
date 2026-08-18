@@ -71,8 +71,8 @@ in ~5 s with synthetic demo data shaped like the real use case:
 | Task looks like | Start from |
 |---|---|
 | Scalar displacement/velocity map (InSAR LOS, uplift, subsidence) | `scripts/displacement_map.py` |
-| Earthquake catalog / seismicity map (± beachballs) | `scripts/seismicity_map.py` |
-| Map + profile / depth section | `scripts/cross_section.py` — `SECTION="topo"` for elevation profiles (needs NO catalog; never invent events), `"events"` for hypocenter sections; aspect guard caps tall regions |
+| Earthquake catalog / seismicity map (± beachballs) | `scripts/seismicity_map.py` — set `CATALOG=dict(minmag=..., start=..., end=...)` for a live USGS fetch (NEVER hand-write fetch code) and `EVENT=(lon, lat)` to assert+star the mainshock |
+| Map + profile / depth section | `scripts/cross_section.py` — `SECTION="topo"` for elevation profiles (needs NO catalog; never invent events), `"events"` for hypocenter sections; `CATALOG=dict(...)` = built-in USGS fetch; `EVENT=(lon,lat)` asserts the epicenter inside REGION; aspect guard caps tall regions |
 | Multi-panel component grids (E/N/U, data-model-residual) | `scripts/multipanel_components.py` |
 | GPS/GNSS vectors + error ellipses | `scripts/velocity_field_map.py` (velo arrows fail **silently** — GOTCHAS §9) |
 | Wrapped interferogram / fringes | `scripts/wrapped_phase_map.py` (cyclic CPT + `interpolation="n"` + moiré guard) |
@@ -81,7 +81,7 @@ in ~5 s with synthetic demo data shaped like the real use case:
 | Earth-interior shells + ray-path diagram | `scripts/earth_interior.py` (polar P projection, Cartesian chords in polar coords) |
 | Focal-mechanism (beachball) overview map | `scripts/focal_mechanisms.py` (manual Mw sizing — `+m` is flat, GOTCHAS 8.3) |
 | Magnitude-time sequence plot | `scripts/mt_plot.py` (datetime axis, multi-segment -Z bars) |
-| Time-colored epicenter map (sequence migration) | `scripts/time_colored_seismicity.py` (decimal-year CPT) |
+| Time-colored epicenter map (sequence migration) | `scripts/time_colored_seismicity.py` (decimal-year CPT; `CATALOG`/`EVENT` as above) |
 | Teleseismic waveform record section | `scripts/record_section.py` (needs obspy; bundled real LHZ data + TauP curves) |
 | ShakeMap-style intensity map | `scripts/shaking_intensity.py` (modeled field — label it as such) |
 

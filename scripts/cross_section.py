@@ -25,6 +25,13 @@ REGION = [138.0, 147.0, 35.0, 42.5]
 SECTION = "events"      # "events" = hypocenter depth section (positive-down);
                         # "topo"   = elevation profile along A-B (no catalog needed —
                         # NEVER invent events to feed this template)
+CATALOG = "bundled"     # "bundled" (Japan-trench demo CSV) or a dict passed to
+                        # data_fetch.usgs_catalog, e.g.
+                        # dict(minmag=4.0, start="2000-01-01", end="2026-01-01")
+                        # -> live USGS fetch over REGION, cached, fail-stop
+EVENT = None            # (lon, lat) of the named event, if any: asserted inside
+                        # REGION (a shipped failure framed the map 0.5 deg off)
+                        # and starred on the map
 RELIEF_RES = "01m"      # earth_relief resolution (small regions: 15s/03s)
 A = [139.2, 38.2]       # profile start [lon, lat] — place A-B THROUGH the target feature
 B = [146.0, 39.8]       # profile end; sanity-check: profile peak/depth must match the
@@ -41,8 +48,15 @@ OUT = "cross_section.png"
 # the westward-deepening Wadati-Benioff zone directly.
 eqs = None
 if SECTION == "events":
-    eqs = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "data", "japan_trench_usgs.csv"))
+    if CATALOG == "bundled":
+        eqs = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                       "data", "japan_trench_usgs.csv"))
+    else:
+        from data_fetch import usgs_catalog
+        eqs = usgs_catalog(REGION, **CATALOG)
+if EVENT is not None:
+    from qc_check import assert_in_region
+    assert_in_region(EVENT[0], EVENT[1], REGION, "event")
 
 relief = pygmt.datasets.load_earth_relief(resolution=RELIEF_RES, region=REGION)
 
@@ -64,6 +78,9 @@ with style(STYLE):
     fig.plot(x=[A[0], B[0]], y=[A[1], B[1]], pen="1.5p,red")
     fig.text(x=[A[0], B[0]], y=[A[1], B[1]], text=["A", "B"],
              offset="0c/0.3c", font="12p,Helvetica-Bold,red")
+    if EVENT is not None:
+        fig.plot(x=[EVENT[0]], y=[EVENT[1]], style="a0.55c", fill="yellow",
+                 pen="0.9p,black")
     panel_label(fig, "A", style_name=STYLE)
 
     # generate="1k" walks the line in 1 km steps; column p is along-track distance,
