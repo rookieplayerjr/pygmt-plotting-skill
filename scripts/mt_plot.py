@@ -52,6 +52,9 @@ with style(STYLE):
         fig.text(x=e.time, y=e.mag, text=f"M{e.mag:.1f}", offset="0.5c/0.15c",
                  font="10p,Helvetica-Bold,black", justify="ML")
     panel_label(fig, "A", style_name=STYLE)
+    # NOTE for adapters: if you add a colorbar under this Cartesian panel, use
+    # colorbar(..., offset=1.5) — the default 0.8c overprints the x-axis label
+    # (shipped failure on a global blind test).
 
 fig.savefig(OUT, dpi=300, crop=True)
 print(f"wrote {OUT}")
