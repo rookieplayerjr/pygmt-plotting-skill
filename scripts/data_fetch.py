@@ -61,3 +61,23 @@ def usgs_catalog(region, minmag=4.0, start="2000-01-01", end="2030-01-01",
           f"(M{cat.mag.min():.1f}-{cat.mag.max():.1f}, "
           f"depth {cat.depth.min():.0f}-{cat.depth.max():.0f} km)")
     return cat
+
+
+def usgs_mainshock(start, end, minmag=6.0, region=None):
+    """Authoritative coordinates for a NAMED earthquake — query USGS, never
+    geocode from memory (a verification run placed the 2025 Dingri M7.1 two
+    degrees west of its true epicenter by trusting recall).
+
+        ev = usgs_mainshock("2025-01-01", "2025-01-10", minmag=6.5)
+        EVENT = (ev["lon"], ev["lat"])
+
+    Returns the largest event in the window as a dict(lon, lat, depth, mag, time).
+    """
+    reg = region or [-180, 180, -90, 90]
+    cat = usgs_catalog(reg, minmag=minmag, start=start, end=end, min_expected=1,
+                       cache=True)
+    ev = cat.loc[cat.mag.idxmax()]
+    print(f"[data] mainshock: M{ev.mag} {ev.time}  ({ev.lon:.3f}, {ev.lat:.3f}) "
+          f"depth {ev.depth:.0f} km")
+    return {"lon": float(ev.lon), "lat": float(ev.lat),
+            "depth": float(ev.depth), "mag": float(ev.mag), "time": str(ev.time)}
