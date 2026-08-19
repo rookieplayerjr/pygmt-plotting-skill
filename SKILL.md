@@ -28,7 +28,7 @@ context" — each opens only on its trigger, and at most once per session:
 All scientific figures MUST follow these format rules:
 
 - **Frame**: `MAP_FRAME_TYPE='plain'`, `MAP_FRAME_PEN='1p,black'`. Never draw frame twice (no basemap + plot both setting frame).
-- **Panel labels**: UPPERCASE letter (A, B, C...) in top-left corner inside frame, **no parentheses**, bold ≥10p, **square box** (white fill + 0.8p black pen, `clearance='1.5p/1.5p/1.5p/1.5p'`). Equal distance from left and top borders. Title text (e.g., "East") centered at top separately.
+- **Panel labels**: UPPERCASE letter (A, B, C...), **no parentheses**, bold ≥10p, placed **OUTSIDE the frame** above the top-left corner, flush with the frame edge (`panel_label()` default — no box needed on the page background). Only when panels sit flush with no outside room, fall back to `panel_label(..., inside=True)`: in-map top-left, square white box + 0.8p black pen. Title text (e.g., "East") centered at top separately.
 - **Tick labels**: Only on left (W) and bottom (S) edges.
 - **Colorbar**: Horizontal at bottom, with unit label, enough offset from axis labels (`+o0c/0.8c`).
 - **Color scale**: `vik` for diverging displacement, sequential: `inferno` or `roma`.
