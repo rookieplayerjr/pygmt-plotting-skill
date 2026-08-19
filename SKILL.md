@@ -246,7 +246,7 @@ savefig → Read 成图 → 逐项过下面清单 → 有任何一项不过 → 
 ### 3. 缺件 (missing elements)
 - [ ] **每支矢量都有箭头头**，包括最短的（秃头=尺寸/`+n` 问题，见 GOTCHAS 9）
 - [ ] 纬度、经度注记都在（W 与 S 两边各自要有）
-- [ ] colorbar 有单位标签；panel label 方框可见（深底图要用风格适配的 label_box）
+- [ ] colorbar 有单位标签；panel label 在图框外左上方可见（inside=True 时才要求方框）
 - [ ] 用户点名的元素一件不少（见下"需求覆盖"）
 
 ### 4. 冗印 (spurious ink)

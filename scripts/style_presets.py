@@ -155,12 +155,23 @@ def style(name="house", **overrides):
     return pygmt.config(**cfg)
 
 
-def panel_label(fig, text, style_name="house", position="TL"):
-    """House-rule panel letter: uppercase, boxed, no parentheses."""
+def panel_label(fig, text, style_name="house", position="TL", inside=False):
+    """House-rule panel letter: uppercase, no parentheses, OUTSIDE the frame
+    (above the top-left corner, journal style) by default. Pass inside=True for
+    the legacy in-map white-box placement (e.g. when the figure sits flush
+    against other panels and outside space is unavailable).
+    """
     s = STYLES[style_name]
-    fig.text(position=position, text=text, font=s["label_font"],
-             justify=position, offset="j0.2c", no_clip=True,
-             clearance="1.5p/1.5p", **s["label_box"])
+    if inside:
+        fig.text(position=position, text=text, font=s["label_font"],
+                 justify=position, offset="j0.2c", no_clip=True,
+                 clearance="1.5p/1.5p", **s["label_box"])
+    else:
+        # anchor at the frame's top-left corner, bottom-left-justify the text and
+        # push it 0.12c up -> the letter sits outside, flush with the frame edge;
+        # no box needed on the page background
+        fig.text(position="TL", text=text, font=s["label_font"],
+                 justify="BL", offset="0c/0.12c", no_clip=True)
 
 
 def colorbar(fig, label, style_name="house", width=8, frame_extra=None, offset=None):
