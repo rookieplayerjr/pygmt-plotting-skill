@@ -297,7 +297,7 @@ PyGMT 0.x 持续重命名参数，老博客/老脚本会报 `unexpected keyword`
 - **现象**：`grdimage [ERROR]: Dimensions of intensity grid do not match that of the data grid!`
 - **解法**：数据和地形梯度分辨率不同时，先 `pygmt.grdsample` 把两者采样到**同一 region + spacing + registration**，再画。
 
-### 8.7 内嵌 colorbar 的 label 伸出主图框 → `+mal`
+### 8.7b 内嵌 colorbar 的 label 伸出主图框 → `+mal`
 - **现象**：`position="jBR/jBL+..+h"` 内嵌水平 colorbar，annotations + label 默认在色条**下方**，会超出主图边框。
 - **解法**：position 末尾加 `+mal`，把 annotations/label 移到色条**上方**；色条本身贴近内框底即可。
 
@@ -305,8 +305,9 @@ PyGMT 0.x 持续重命名参数，老博客/老脚本会报 `unexpected keyword`
 - **现象**：只想用白矩形盖背景，却多出一圈黑边框。
 - **解法**：纯填充无边 → 显式 `pen="white"`（同色隐藏）；GMT psxy 给了 `-G` 默认仍画 `-W`。
 
-### 8.9 inset 骑在主图角上（一半内一半外）
+### 8.9 inset 骑在主图角上（一半内一半外）；横向探出会撑宽整图
 - 用负 offset 把 inset 中心推到主图角：`position="jTR+w<W>/<H>+o-<W/2>c/-<H/2>c"`（offset 正=向内，负=向外）。要"大部分在内、角探出"就用小负值。
+- **横向探出的代价**：整图画布跟着变宽，破坏与下方面板的左右对齐（实测 16 cm 图被撑到 19.1 cm）。要保持多面板列对齐，横向偏移设 0 或很小，只向上探：`+o0c/-<H/2>c`（右缘与图框齐平）。
 
 ### 8.10 密集标签/beachball 防重叠：偏移 + 引线
 - 聚集事件：beachball 画到**偏移位置**，`fig.plot` 画细线连回真实震中，真实点画小圆点。两行标签合并成一行可显著减重叠；放大整图（增大 `W`）也直接拉开标签间距。
@@ -335,6 +336,52 @@ PyGMT 0.x 持续重命名参数，老博客/老脚本会报 `unexpected keyword`
 - **副作用**：高 dpi 输出时 input pixel 边界肉眼可见（小马赛克）；如要既无 wrap 伪带又看不出马赛克，先把 source grid `grdsample` 上采样 2-4×（仍用 nearest），让物理像素小于 1 px@output dpi。
 - **同坑**：用 `vik` 等 zero-centered 但**非** cyclic 的 diverging cmap 画相位类数据时一样出问题（更明显，因 vik 中点是白色）。InSAR wrapped phase **必须** cyclic cmap (`romaO`/`vikO`/`brocO`)。
 - **物理分辨率瓶颈** 仍受 multi-look 限制（如 rng-looks 8×2 → 100 m posting）；要更细 fringe 需重处理用 rng-looks 4×1。
+
+### 8.14 GMT 没有"有轴线、无刻度"的 `-B` 写法 —— 及三条失败绕路（Venezuela Fig.1 实测）
+- **需求**："去掉上边和右边的刻度线（但保留框线）"——审稿人/合作者的常见要求。
+- **`-B` 侧边字母语义**：大写 `W/E/S/N` = 轴线+刻度+注记；小写 `w/e/s/n` = 轴线+刻度、**无注记**（刻度照画，300 dpi 实测上缘 282 个凸出刻度像素）；缺省 = 什么都不画。`-B` 本身表达不了"只要轴线"。
+- **失败路线（按踩坑顺序，别再走）**：
+  1. `frame=["WSne",...]` → 上/右仍有刻度（小写只去注记）。
+  2. 改用 `fig.plot` 画 `y=region[3]` 横线补上框 → 线压在 region 边界被 GMT 裁掉（实测该行最长连续深色 152 px，框宽需 1890 px）。
+  3. 加 `no_clip=True` → 线出现了，但它本来就按调用顺序画在最上层，被裁时看不见而已；现在**横穿更早画的 inset**。不要用 no_clip 对抗图层顺序。
+  4. 把补框挪早（basemap 之后、内容之前）→ 被 `coast`/`grdimage` 盖住：满幅 `land` 的面板整条框消失（实测右框只剩 107 px / 应有 417 px），只铺海面的面板断一段。
+- **正解**（helpers 见 `scripts/frame_helpers.py`，可直接 import）：`-B` 里删掉上/右（`"WSne"`→`"WS"`），面板**所有内容画完后**用零长刻度补齐四边：
+  ```python
+  def sides_WS(frame):
+      f = list(frame)
+      f[0] = "".join(c for c in f[0] if c not in "neNE")
+      return f
+
+  def close_box(fig, pen="1p,black"):
+      with pygmt.config(MAP_TICK_LENGTH_PRIMARY="0p",
+                        MAP_FRAME_PEN=pen, MAP_FRAME_TYPE="plain"):
+          fig.basemap(frame=["wsne"])      # 继承当前 region/projection
+  ```
+  第一次 `basemap(frame=sides_WS([...]))` 给 W/S 刻度+注记；`close_box(fig)` 排在面板/子格**最后**补轴线（零刻度长度实测上缘 0 个凸出像素）。
+
+### 8.15 inset 边框比面板框细——不是 `-F+p` 失灵，是内容盖掉了内半
+- **现象**：inset 边框明显比面板框线细。像素测量（300 dpi）：panel `MAP_FRAME_PEN="1p,black"` → **4 px**（理论 4.17）；inset `box="+gwhite+p0.8p,black"` → **2.7 px**（理论 3.3）；改 `+p1p,black` → **仍 2.7 px**，仿佛 `-F+p` 线宽被忽略。不量像素只会觉得"看着细了点"。
+- **真实成因**（最小复现验证）：inset 的 box 在 `fig.inset()` 上下文**开启时**先画，边框线骑在 inset region 边界上；随后的内容（coast 的 land、grdimage、满幅填充）画到 region 边缘，**覆盖边框内侧一半**。空 inset 实测 `+p1p` = 5 px（与面板同宽）；给 inset 填满内容后 → 2 px。加粗 pen "无效"是因为更宽的内半也被盖掉。
+  ```python
+  # 最小复现：空 inset 边框 5 px；加上这行满幅填充 → 2 px
+  with fig.inset(position="jTR+w3c/2c+o0.3c", box="+gwhite+p1p,black"):
+      fig.plot(x=[0,1,1,0,0], y=[0,0,1,1,0], region=[0,1,0,1],
+               projection="X3c/2c", fill="gray92")
+  ```
+- **解法**：`-F` 只给填充（`box="+gwhite"`），边框在 inset 内容**画完后**用 `close_box(fig)` 补（见 8.14）——画在最上层不会被盖，且与面板共用 `MAP_FRAME_PEN`，改一处两边同步。
+
+### 8.16 inset 的框高必须由 region 算出，写死会让地图溢出框外
+- **现象**：inset 底部内容溢出白框。`+w4.6c/3.09c` 写死，而该 region 在 4.6 cm 宽下的墨卡托真实高度是 3.21 cm——地图比框高 0.12 cm。
+- **解法**：`frame_helpers.mercator_height(width, region)` 现算：
+  ```python
+  y = lambda p: np.degrees(np.log(np.tan(np.radians(45 + p / 2))))
+  H = W * (y(reg[3]) - y(reg[2])) / (reg[1] - reg[0])
+  ```
+
+### 8.17 多边形填充与边界线来自不同文件 → 缺段渲染成"凭空多出的竖条"
+- **现象**：inset 右侧一条从上到下的竖直色带，像渲染缺陷。
+- **原因**：板块多边形（填充）画到 −57.4°E，而边界线文件 `pb_l1.gmt`/`pb_l1_subduction.gmt` 在 −61.5…−58.5°E / 8…20°N 窗口**一段都没有**——那里只有填充色突变、没有线。地理上是真实边界（小安的列斯弧），视觉上像缺陷。
+- **解法**：补边界线数据，或收紧 region 让该处出视野。**排查法**：先统计边界线文件在该经纬窗口内的段数，区分数据缺失与渲染问题。
 
 ---
 
@@ -370,3 +417,20 @@ fig.plot(x=x, y=y, direction=[azimuth, length],
 ```
 `+e` 开末端头 · `+g` 填色 · `+h0.5` 适度后掠 · `+n1c` 保证短矢量不掉头。
 `plot(fill="red")` 与 style 里的 `+gred` **等价**，二选一即可，不必都写。
+
+---
+
+## 10. 非 PyGMT，但同批出图实测（GeoPandas / Python）
+
+### 10.1 GeoPandas 按整要素 centroid 过滤会删掉目标；`.cx[]` 是包围盒不是裁剪
+- **现象**：想剔除漫进图幅的远场冲积层，用"要素 centroid 在图幅内"过滤，论文真正建模的盆地整个消失。
+- **原因**：数据把目标盆地（Yaracuy 河谷）和数百公里外的 Llanos 前陆存成**同一个连通多边形**，centroid 落在 (−69.11, 8.80)，图幅外。
+- **解法**：先按图幅裁剪几何再 `explode`，然后过滤：
+  ```python
+  BASIN["geometry"] = BASIN.geometry.intersection(box(*frame))
+  BASIN = BASIN[~BASIN.geometry.is_empty].explode(index_parts=False)
+  ```
+- **同坑**：`.cx[]` 是**包围盒过滤，不是裁剪**——拿它的结果算面积严重虚高（同一层实测 34.4% vs 裁剪后 14.4%）。这类筛选加一条回归打印（如「建模盆地被覆盖 = True」）。
+
+### 10.2 `re.sub` 的替换串吃反斜杠
+- 整块替换含 `\author`、`\normalsize` 的 LaTeX/脚本文本时，替换串里 `\a` 被解释成转义。用 `lambda m: new` 作替换绕过。
